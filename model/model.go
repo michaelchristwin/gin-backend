@@ -6,12 +6,10 @@ import (
 	"net/http"
 	"os"
 	"strconv"
-	"time"
 
 	"example.com/gin/database"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
-	"golang.org/x/crypto/bcrypt"
 )
 
 var (
@@ -53,9 +51,9 @@ func AddStock(ctx *gin.Context) {
 	_, err = database.Db.Exec("insert into stocks(description,unit_price,units) values ($1,$2,$3)", body.Description, body.Unit_price, body.Units)
 	if err != nil {
 		fmt.Println(err)
-		ctx.AbortWithStatusJSON(400, "Couldn't create the new user.")
+		ctx.AbortWithStatusJSON(400, "Couldn't create the stock.")
 	} else {
-		ctx.JSON(http.StatusOK, "User is successfully created.")
+		ctx.JSON(http.StatusOK, "Stock is successfully created.")
 	}
 }
 
@@ -142,51 +140,7 @@ func DeleteStock(ctx *gin.Context) {
 }
 
 // For User model
-func Login(ctx *gin.Context) {
-	var user User
 
-	// Directly bind JSON to the user struct for efficiency
-	if err := ctx.ShouldBindJSON(&user); err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid input"})
-		return
-	}
-
-	// Use prepared statement for security and clarity
-	stmt, err := database.Db.Prepare("SELECT id, username, password FROM users WHERE username = ?")
-	if err != nil {
-		ctx.AbortWithStatus(http.StatusInternalServerError)
-
-		return
-	}
-	defer stmt.Close() // Ensure proper resource cleanup
-
-	row := stmt.QueryRow(user.Username) // Use username as query parameter
-	var userID int
-	var hashedPassword string
-	err = row.Scan(&userID, &hashedPassword)
-	if err != nil {
-		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid username"})
-		return
-	}
-	err = bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(user.Password))
-	if err != nil {
-		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid password"})
-		return
-	}
-
-	// Authentication successful, proceed with actions for logged-in user
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"user_id": userID,
-		"exp":     time.Now().Add(time.Hour * 24).Unix(), // Set token expiration
-	})
-	tokenString, err := token.SignedString(jwtSecret)
-	if err != nil {
-		ctx.AbortWithStatus(http.StatusInternalServerError)
-		return
-	}
-	ctx.JSON(http.StatusOK, gin.H{"token": tokenString})
-
-}
 func AuthMiddleware(c *gin.Context) {
 	tokenString := c.GetHeader("Authorization")
 	if tokenString == "" {

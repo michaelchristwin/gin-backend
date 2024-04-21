@@ -1,9 +1,9 @@
 package main
 
 import (
-	"net/http"
-
+	"example.com/gin/controllers"
 	"example.com/gin/database"
+	"example.com/gin/middleware"
 	"example.com/gin/model"
 
 	"github.com/gin-contrib/cors"
@@ -23,17 +23,15 @@ func main() {
 			"message": "pong",
 		})
 	})
-	r.POST("/stocks", model.AddStock)
-	r.GET("/stocks", model.GetStock)
-	r.PUT("/stocks/:id", model.UpdateStock)
-	r.DELETE("/stocks/:id", model.DeleteStock)
-	r.POST("/login", model.Login)
-	protected := r.Group("/admin", model.AuthMiddleware)
-	protected.GET("/", func(c *gin.Context) {
-		c.JSON(http.StatusOK, gin.H{
-			"message": "Welcome to the admin dashboard",
-		})
-	})
-	r.Run(":8080")
+	protected := r.Group("/admin")
+	protected.Use(middleware.RequireAuth)
+	protected.GET("/")
+	protected.POST("/stocks", model.AddStock)
+	protected.GET("/stocks", model.GetStock)
+	protected.PUT("/stocks/:id", model.UpdateStock)
+	protected.DELETE("/stocks/:id", model.DeleteStock)
+	r.POST("/login", controllers.Login)
+	r.POST("/signup", controllers.Signup)
+	r.Run(":3001")
 
 }
