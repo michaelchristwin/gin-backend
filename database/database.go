@@ -22,7 +22,7 @@ func ConnectDatabase() {
 	user := os.Getenv("DB_USER")
 	pass := os.Getenv("PASSWORD")
 	dbname := os.Getenv("DB_NAME")
-	dsn := fmt.Sprintf("host=%s port=%d user=%s dbname=%s password=%s sslmode=require",
+	dsn := fmt.Sprintf("host=%s port=%d user=%s dbname=%s password=%s sslmode=disable",
 		host, port, user, dbname, pass)
 	Database, err := sql.Open("postgres", dsn)
 	if err != nil {
@@ -47,18 +47,22 @@ func ConnectDatabase() {
 	if err != nil {
 		fmt.Println("Error creating table:", err)
 
+	} else {
+		fmt.Println("Table stocks created successfully.")
 	}
-	fmt.Println("Table created successfully.")
-	createTableStmt := `
+
+	_, err = Db.Exec(`
 	CREATE TABLE IF NOT EXISTS users (
 		id SERIAL PRIMARY KEY,
-		email TEXT NOT NULL UNIQUE,
-		password TEXT NOT NULL
-	)`
-	_, err = Db.Exec(createTableStmt)
+		username VARCHAR(255) NOT NULL,
+		password VARCHAR(255) NOT NULL
+	)`)
+
 	if err != nil {
 		fmt.Println("Error creating table login:", err)
 
+	} else {
+		fmt.Println("Table users created successfully.")
 	}
 
 }

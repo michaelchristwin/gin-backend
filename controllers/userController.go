@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"fmt"
 	"net/http"
 	"os"
 	"time"
@@ -26,18 +27,20 @@ func Login(ctx *gin.Context) {
 	}
 
 	// Use prepared statement for security and clarity
-	stmt, err := database.Db.Prepare("SELECT id, username, password FROM users WHERE username = ?")
+	stmt, err := database.Db.Prepare("SELECT id, username, password FROM users WHERE username = $1")
 	if err != nil {
 		ctx.AbortWithStatus(http.StatusInternalServerError)
-
+		println("failed to create statement", err.Error())
 		return
 	}
 	defer stmt.Close()                  // Ensure proper resource cleanup
 	row := stmt.QueryRow(user.Username) // Use username as query parameter
 	var userID int
+	var username string
 	var hashedPassword string
-	err = row.Scan(&userID, &hashedPassword)
+	err = row.Scan(&userID, &username, &hashedPassword)
 	if err != nil {
+		fmt.Println("Failed to scan row", err.Error())
 		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid username"})
 		return
 	}
@@ -54,12 +57,15 @@ func Login(ctx *gin.Context) {
 	})
 	tokenString, err := token.SignedString(jwtSecret)
 	if err != nil {
+		println("Failed to get tokenString", err)
 		ctx.AbortWithStatus(http.StatusInternalServerError)
 		return
 	}
 	ctx.SetSameSite(http.SameSiteLaxMode)
-	ctx.SetCookie("Authorization", tokenString, 3600*24, "", "", false, true)
-	ctx.JSON(http.StatusOK, gin.H{})
+	ctx.SetCookie("Authorization", tokenString, 3600*24, "/", "localhost", false, true)
+	ctx.JSON(http.StatusOK, gin.H{
+		"message": "Cookie has been set",
+	})
 
 }
 
@@ -82,13 +88,16 @@ func Signup(c *gin.Context) {
 	}
 	user := model.User{Username: body.Username, Password: string(hash)}
 
-	stmt, err := database.Db.Prepare("insert into users(username,password) values ($1,$2)")
+	stmt, err := database.Db.Prepare("INSERT INTO users(username, password) VALUES ($1, $2)")
 	if err != nil {
+		fmt.Println("failed to prepare sql statment", err)
 		c.JSON(http.StatusBadRequest, gin.H{
-			"error": "Failed to prepare sql stmt",
+			"error": "Failed to prepare sql stmt ",
 		})
 		return
+
 	}
+	defer stmt.Close()
 	_, err = stmt.Exec(user.Username, user.Password)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{

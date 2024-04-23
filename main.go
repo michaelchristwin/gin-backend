@@ -14,9 +14,14 @@ func main() {
 	database.ConnectDatabase()
 	r := gin.Default()
 	corsConfig := cors.DefaultConfig()
-	corsConfig.AllowAllOrigins = true
+	corsConfig.AllowOrigins = []string{"http://localhost:3000"}
+	corsConfig.AllowCredentials = true
 	corsConfig.AllowMethods = []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"}
-	corsConfig.AllowHeaders = []string{"Content-Type", "Authorization"}
+	corsConfig.AllowHeaders = []string{"Authorization", "Access-Control-Allow-Headers", "Origin,Accept", "X-Requested-With", "Content-Type", "Access-Control-Request-Method", "Access-Control-Request-Headers"}
+	corsConfig.AllowWildcard = true
+	corsConfig.AllowFiles = true
+	corsConfig.AllowBrowserExtensions = true
+	corsConfig.AllowWebSockets = true
 	r.Use(cors.New(corsConfig))
 	r.GET("ping", func(ctx *gin.Context) {
 		ctx.JSON(200, gin.H{
