@@ -18,7 +18,7 @@ func ConnectDatabase() {
 		fmt.Println("Error occured on .env file, please check")
 	}
 	host := os.Getenv("HOST")
-	port, _ := strconv.Atoi(os.Getenv("PORT"))
+	port, _ := strconv.Atoi(os.Getenv("DB_PORT"))
 	user := os.Getenv("DB_USER")
 	pass := os.Getenv("PASSWORD")
 	dbname := os.Getenv("DB_NAME")

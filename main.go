@@ -11,6 +11,7 @@ import (
 )
 
 func main() {
+	gin.SetMode(gin.DebugMode)
 	database.ConnectDatabase()
 	r := gin.Default()
 	corsConfig := cors.DefaultConfig()
