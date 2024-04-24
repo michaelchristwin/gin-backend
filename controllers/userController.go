@@ -61,8 +61,8 @@ func Login(ctx *gin.Context) {
 		ctx.AbortWithStatus(http.StatusInternalServerError)
 		return
 	}
-	ctx.SetSameSite(http.SameSiteLaxMode)
-	ctx.SetCookie("Authorization", tokenString, 3600*24, "/", "localhost", false, true)
+	ctx.SetSameSite(http.SameSiteNoneMode)
+	ctx.SetCookie("Authorization", tokenString, 3600*24, "/", "localhost", true, true)
 	ctx.JSON(http.StatusOK, gin.H{
 		"message": "Cookie has been set",
 	})
