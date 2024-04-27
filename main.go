@@ -24,6 +24,11 @@ func main() {
 	corsConfig.AllowBrowserExtensions = true
 	corsConfig.AllowWebSockets = true
 	r.Use(cors.New(corsConfig))
+	r.GET("/", middleware.RequireAuth, func(ctx *gin.Context) {
+		ctx.JSON(200, gin.H{
+			"message": "Poco Loco",
+		})
+	})
 	r.GET("ping", func(ctx *gin.Context) {
 		ctx.JSON(200, gin.H{
 			"message": "pong",
@@ -31,7 +36,6 @@ func main() {
 	})
 	protected := r.Group("/admin")
 	protected.Use(middleware.RequireAuth)
-	protected.GET("/")
 	protected.POST("/stocks", model.AddStock)
 	protected.GET("/stocks", model.GetStock)
 	protected.PUT("/stocks/:id", model.UpdateStock)
@@ -39,10 +43,5 @@ func main() {
 	r.POST("/login", controllers.Login)
 	r.POST("/signup", controllers.Signup)
 	r.Run(":3001")
-	r.GET("/", middleware.RequireAuth, func(ctx *gin.Context) {
-		ctx.JSON(200, gin.H{
-			"message": "Poco Loco",
-		})
-	})
 
 }
