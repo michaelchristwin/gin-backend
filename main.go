@@ -39,5 +39,10 @@ func main() {
 	r.POST("/login", controllers.Login)
 	r.POST("/signup", controllers.Signup)
 	r.Run(":3001")
+	r.GET("/", middleware.RequireAuth, func(ctx *gin.Context) {
+		ctx.JSON(200, gin.H{
+			"message": "Poco Loco",
+		})
+	})
 
 }
