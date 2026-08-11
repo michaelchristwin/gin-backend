@@ -1,0 +1,32 @@
+query GetMeterDataPoints(
+  $meterNumber: Int!
+  $block: BlockFilter
+  $first: Int!
+  $sortBy: MeterDataPointOrderBy
+  $after: String
+) {
+  meterDataPoints(
+    meterNumber: $meterNumber
+    block: $block
+    first: $first
+    sortBy: $sortBy
+    after: $after
+  ) {
+    node {
+      transactionId
+      meterNumber
+      timestamp
+      payload {
+        energy
+        nonce
+        voltage
+        energy
+        longitude
+        latitude
+        signature
+        publicKey
+      }
+    }
+    cursor
+  }
+}
