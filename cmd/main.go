@@ -13,11 +13,19 @@ import (
 )
 
 func main() {
+	gin.SetMode(gin.ReleaseMode)
 	router := gin.Default()
-
 	router.GET("/", func(c *gin.Context) {
 		time.Sleep(5 * time.Second)
 		c.String(http.StatusOK, "Welcome Gin Server")
+	})
+
+	// Catch-all route
+	router.NoRoute(func(ctx *gin.Context) {
+		ctx.JSON(http.StatusNotFound, gin.H{
+			"error": "Route not found",
+			"path":  ctx.Request.URL.Path,
+		})
 	})
 
 	srv := &http.Server{
