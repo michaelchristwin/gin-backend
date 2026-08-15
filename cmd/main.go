@@ -1,7 +1,11 @@
 package main
 
 import (
+	"database/sql"
 	"gin-backend/internal/config"
+	sqlc "gin-backend/internal/db"
+
+	_ "modernc.org/sqlite" // pure-Go sqlite driver (no CGO needed)
 
 	"context"
 	"fmt"
@@ -17,6 +21,14 @@ import (
 
 func main() {
 	cfg := config.Load()
+
+	db, err := sql.Open("sqlite", cfg.DBDSN)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer db.Close()
+
+	queries := sqlc.New(db)
 	router := gin.Default()
 
 	router.GET("/", func(c *gin.Context) {
