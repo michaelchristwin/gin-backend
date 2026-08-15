@@ -4,6 +4,9 @@ import (
 	"database/sql"
 	"gin-backend/internal/config"
 	sqlc "gin-backend/internal/db"
+	"gin-backend/internal/handler"
+	"gin-backend/internal/repository"
+	"gin-backend/internal/service"
 
 	_ "modernc.org/sqlite" // pure-Go sqlite driver (no CGO needed)
 
@@ -29,12 +32,17 @@ func main() {
 	defer db.Close()
 
 	queries := sqlc.New(db)
+	userRepo := repository.NewUserRepository(queries)
+	userService := service.NewUserService(userRepo)
+	userHandler := handler.NewUserHandler(userService)
+
 	router := gin.Default()
+	api := router.Group("/api/v1")
 
 	router.GET("/", func(c *gin.Context) {
 		c.String(http.StatusOK, "Welcome Gin Server")
 	})
-
+	userHandler.RegisterRoutes(api)
 	// Catch-all route
 	router.NoRoute(func(ctx *gin.Context) {
 		ctx.JSON(http.StatusNotFound, gin.H{
