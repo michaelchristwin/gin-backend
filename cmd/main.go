@@ -1,7 +1,10 @@
 package main
 
 import (
+	"gin-backend/internal/config"
+
 	"context"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -13,10 +16,10 @@ import (
 )
 
 func main() {
-	gin.SetMode(gin.ReleaseMode)
+	cfg := config.Load()
 	router := gin.Default()
+
 	router.GET("/", func(c *gin.Context) {
-		time.Sleep(5 * time.Second)
 		c.String(http.StatusOK, "Welcome Gin Server")
 	})
 
@@ -29,7 +32,7 @@ func main() {
 	})
 
 	srv := &http.Server{
-		Addr:    ":8080",
+		Addr:    fmt.Sprintf(":%s", cfg.Port),
 		Handler: router.Handler(),
 	}
 
