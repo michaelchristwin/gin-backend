@@ -25,7 +25,7 @@ func (h *UserHandler) RegisterRoutes(r *gin.RouterGroup) {
 	r.GET("/users/:id", h.GetUser)
 	r.DELETE("/users/:id", h.DeleteUser)
 	r.GET("/users", h.ListUsers)
-	r.PUT("/users", h.UpdateUser)
+	r.PUT("/users/:id", h.UpdateUser)
 }
 
 func (h *UserHandler) CreateUser(c *gin.Context) {
@@ -65,7 +65,7 @@ func (h *UserHandler) UpdateUser(c *gin.Context) {
 		return
 	}
 
-	user, err := h.service.UpdateUser(c.Request.Context(), input.Name, input.Email)
+	user, err := h.service.UpdateUser(c.Request.Context(), &input)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
