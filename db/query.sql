@@ -10,9 +10,9 @@ SELECT * FROM users ORDER BY id LIMIT ? OFFSET ?;
 -- name: UpdateUser :one
 UPDATE users
 SET
-    name = COALESCE(?, name),
-    email = COALESCE(?, email)
-WHERE id = ?
+    name = COALESCE(sqlc.narg(name), name),
+    email = COALESCE(sqlc.narg(email), email)
+WHERE id = sqlc.arg(id)
 RETURNING *;
 
 -- name: DeleteUser :exec
