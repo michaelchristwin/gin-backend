@@ -7,6 +7,7 @@ package db
 
 import (
 	"context"
+	"database/sql"
 )
 
 const createUser = `-- name: CreateUser :one
@@ -81,15 +82,15 @@ func (q *Queries) ListUsers(ctx context.Context, arg ListUsersParams) ([]User, e
 const updateUser = `-- name: UpdateUser :one
 UPDATE users
 SET
-    name = COALESCE(?, name),
-    email = COALESCE(?, email)
-WHERE id = ?
+    name = COALESCE(?1, name),
+    email = COALESCE(?2, email)
+WHERE id = ?3
 RETURNING id, name, email
 `
 
 type UpdateUserParams struct {
-	Name  string
-	Email string
+	Name  sql.NullString
+	Email sql.NullString
 	ID    int64
 }
 

@@ -27,7 +27,7 @@ func (h *UserHandler) RegisterRoutes(r *gin.RouterGroup) {
 	r.GET("/users/:id", h.GetUser)
 	r.DELETE("/users/:id", h.DeleteUser)
 	r.GET("/users", h.ListUsers)
-	r.PATCH("/users/:id")
+	r.PATCH("/users/:id", h.UpdateUser)
 }
 
 func (h *UserHandler) CreateUser(c *gin.Context) {

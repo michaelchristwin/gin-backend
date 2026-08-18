@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"database/sql"
 	sqlc "gin-backend/internal/db"
 	"gin-backend/internal/model"
 )
@@ -59,9 +60,26 @@ func (r *userRepository) GetAll(ctx context.Context, limit, offset int64) ([]mod
 }
 
 func (r *userRepository) Update(ctx context.Context, req *model.UpdateUserRequest, id int64) (*model.User, error) {
-	row, err := r.q.UpdateUser(ctx, sqlc.UpdateUserParams{ID: id, Name: *req.Name, Email: *req.Email})
+	row, err := r.q.UpdateUser(ctx, sqlc.UpdateUserParams{
+		ID: id,
+		Name: sql.NullString{
+			String: deref(req.Name),
+			Valid:  req.Name != nil,
+		},
+		Email: sql.NullString{
+			String: deref(req.Email),
+			Valid:  req.Email != nil,
+		},
+	})
 	if err != nil {
 		return nil, err
 	}
 	return &model.User{ID: row.ID, Name: row.Name, Email: row.Email}, nil
+}
+
+func deref(s *string) string {
+	if s == nil {
+		return ""
+	}
+	return *s
 }
