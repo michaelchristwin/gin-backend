@@ -75,7 +75,7 @@ func (h *UserHandler) UpdateUser(c *gin.Context) {
 
 func (h *UserHandler) DeleteUser(c *gin.Context) {
 	id, _ := strconv.ParseInt(c.Param("id"), 10, 64)
-	user, err := h.service.DeleteUser(c.Request.Context(), id)
+	err := h.service.DeleteUser(c.Request.Context(), id)
 
 	if err != nil {
 		if errors.Is(err, context.DeadlineExceeded) {
@@ -85,7 +85,7 @@ func (h *UserHandler) DeleteUser(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	c.JSON(http.StatusOK, user)
+	c.Status(http.StatusNoContent)
 }
 
 func (h *UserHandler) ListUsers(c *gin.Context) {

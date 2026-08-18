@@ -13,7 +13,18 @@ SET name = ?, email = ?
 WHERE id = ? 
 RETURNING *;
 
--- name: DeleteUser :one
+-- name: DeleteUser :exec
 DELETE FROM users 
-WHERE id = ? 
+WHERE id = ?;
+
+-- name: UpdateUserEmail :one
+UPDATE users
+SET email = ?
+WHERE id = ?
+RETURNING *;
+
+-- name: UpdateUserName :one
+UPDATE users
+SET name = ?
+WHERE id = ?
 RETURNING *;

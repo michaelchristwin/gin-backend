@@ -11,7 +11,7 @@ type UserService interface {
 	RegisterUser(ctx context.Context, name, email string) (*model.User, error)
 	GetUser(ctx context.Context, id int64) (*model.User, error)
 	ListUsers(ctx context.Context, limit, offset int64) ([]model.User, error)
-	DeleteUser(ctx context.Context, id int64) (*model.User, error)
+	DeleteUser(ctx context.Context, id int64) error
 	UpdateUser(ctx context.Context, user *model.User) (*model.User, error)
 }
 
@@ -36,8 +36,9 @@ func (s *userService) ListUsers(ctx context.Context, limit, offset int64) ([]mod
 	return s.repo.GetAll(ctx, limit, offset)
 }
 
-func (s *userService) DeleteUser(ctx context.Context, id int64) (*model.User, error) {
+func (s *userService) DeleteUser(ctx context.Context, id int64) error {
 	return s.repo.Delete(ctx, id)
+
 }
 
 func (s *userService) UpdateUser(ctx context.Context, user *model.User) (*model.User, error) {
