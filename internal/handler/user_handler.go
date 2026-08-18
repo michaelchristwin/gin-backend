@@ -3,9 +3,11 @@ package handler
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net/http"
 	"strconv"
 
+	"gin-backend/internal/middleware"
 	"gin-backend/internal/model"
 	"gin-backend/internal/service"
 
@@ -25,7 +27,7 @@ func (h *UserHandler) RegisterRoutes(r *gin.RouterGroup) {
 	r.GET("/users/:id", h.GetUser)
 	r.DELETE("/users/:id", h.DeleteUser)
 	r.GET("/users", h.ListUsers)
-	r.PUT("/users/:id", h.UpdateUser)
+	r.PATCH("/users/:id")
 }
 
 func (h *UserHandler) CreateUser(c *gin.Context) {
@@ -45,7 +47,16 @@ func (h *UserHandler) CreateUser(c *gin.Context) {
 }
 
 func (h *UserHandler) GetUser(c *gin.Context) {
-	id, _ := strconv.ParseInt(c.Param("id"), 10, 64)
+	idParam := c.Param("id")
+	if idParam == "" {
+		c.Error(middleware.MissingParam("id"))
+		return
+	}
+	id, err := strconv.ParseInt(idParam, 10, 64)
+	if err != nil {
+		c.Error(middleware.InvalidParam("id", err))
+		return
+	}
 	user, err := h.service.GetUser(c.Request.Context(), id)
 	if err != nil {
 		if errors.Is(err, context.DeadlineExceeded) {
@@ -59,13 +70,23 @@ func (h *UserHandler) GetUser(c *gin.Context) {
 }
 
 func (h *UserHandler) UpdateUser(c *gin.Context) {
-	var input model.User
+	idParam := c.Param("id")
+	if idParam == "" {
+		c.Error(middleware.MissingParam("id"))
+		return
+	}
+	id, err := strconv.ParseInt(idParam, 10, 64)
+	if err != nil {
+		c.Error(middleware.InvalidParam("id", err))
+		return
+	}
+	var input model.UpdateUserRequest
 	if err := c.ShouldBindJSON(&input); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.Error(middleware.BadRequest("invalid request body", err))
 		return
 	}
 
-	user, err := h.service.UpdateUser(c.Request.Context(), &input)
+	user, err := h.service.UpdateUser(c.Request.Context(), &input, id)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -74,30 +95,56 @@ func (h *UserHandler) UpdateUser(c *gin.Context) {
 }
 
 func (h *UserHandler) DeleteUser(c *gin.Context) {
-	id, _ := strconv.ParseInt(c.Param("id"), 10, 64)
-	err := h.service.DeleteUser(c.Request.Context(), id)
+	idParam := c.Param("id")
+	if idParam == "" {
+		c.Error(middleware.MissingParam("id"))
+		return
+	}
+	id, err := strconv.ParseInt(idParam, 10, 64)
+	if err != nil {
+		c.Error(middleware.InvalidParam("id", err))
+		return
+	}
+
+	err = h.service.DeleteUser(c.Request.Context(), id)
 
 	if err != nil {
 		if errors.Is(err, context.DeadlineExceeded) {
-			c.JSON(http.StatusGatewayTimeout, gin.H{"error": "request timed out"})
+			c.Error(middleware.Timeout(err))
 			return
 		}
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		c.Error(middleware.Internal(err)) // don't expose err.Error() to the client
 		return
 	}
 	c.Status(http.StatusNoContent)
 }
 
 func (h *UserHandler) ListUsers(c *gin.Context) {
-	limit, _ := strconv.ParseInt(c.DefaultQuery("limit", "10"), 10, 64)
-	offset, _ := strconv.ParseInt(c.DefaultQuery("offset", "0"), 10, 64)
+	limit, err := strconv.ParseInt(c.DefaultQuery("limit", "10"), 10, 64)
+	if err != nil {
+		c.Error(middleware.InvalidParam("limit", err))
+		return
+	}
+	if limit < 1 || limit > 100 {
+		c.Error(middleware.InvalidParam("limit", fmt.Errorf("must be between 1 and 100, got %d", limit)))
+		return
+	}
+	offset, err := strconv.ParseInt(c.DefaultQuery("offset", "0"), 10, 64)
+	if err != nil {
+		c.Error(middleware.InvalidParam("offset", err))
+		return
+	}
+	if offset < 0 {
+		c.Error(middleware.InvalidParam("offset", fmt.Errorf("must be >= 0, got %d", offset)))
+		return
+	}
 	users, err := h.service.ListUsers(c.Request.Context(), limit, offset)
 	if err != nil {
 		if errors.Is(err, context.DeadlineExceeded) {
-			c.JSON(http.StatusGatewayTimeout, gin.H{"error": "request timed out"})
+			c.Error(middleware.Timeout(err))
 			return
 		}
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		c.Error(middleware.Internal(err))
 		return
 	}
 	c.JSON(http.StatusOK, users)

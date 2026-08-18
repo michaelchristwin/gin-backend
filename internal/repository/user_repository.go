@@ -11,7 +11,7 @@ type UserRepository interface {
 	Delete(ctx context.Context, id int64) error
 	GetById(ctx context.Context, id int64) (*model.User, error)
 	GetAll(ctx context.Context, limit, offset int64) ([]model.User, error)
-	Update(ctx context.Context, user *model.User) (*model.User, error)
+	Update(ctx context.Context, req *model.UpdateUserRequest, id int64) (*model.User, error)
 }
 
 type userRepository struct {
@@ -58,8 +58,8 @@ func (r *userRepository) GetAll(ctx context.Context, limit, offset int64) ([]mod
 	return users, nil
 }
 
-func (r *userRepository) Update(ctx context.Context, user *model.User) (*model.User, error) {
-	row, err := r.q.UpdateUser(ctx, sqlc.UpdateUserParams{ID: user.ID, Name: user.Name, Email: user.Email})
+func (r *userRepository) Update(ctx context.Context, req *model.UpdateUserRequest, id int64) (*model.User, error) {
+	row, err := r.q.UpdateUser(ctx, sqlc.UpdateUserParams{ID: id, Name: *req.Name, Email: *req.Email})
 	if err != nil {
 		return nil, err
 	}

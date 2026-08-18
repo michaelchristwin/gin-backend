@@ -8,23 +8,14 @@ SELECT * FROM users WHERE id = ? LIMIT 1;
 SELECT * FROM users ORDER BY id LIMIT ? OFFSET ?;
 
 -- name: UpdateUser :one
-UPDATE users 
-SET name = ?, email = ? 
-WHERE id = ? 
+UPDATE users
+SET
+    name = COALESCE(?, name),
+    email = COALESCE(?, email)
+WHERE id = ?
 RETURNING *;
 
 -- name: DeleteUser :exec
 DELETE FROM users 
 WHERE id = ?;
 
--- name: UpdateUserEmail :one
-UPDATE users
-SET email = ?
-WHERE id = ?
-RETURNING *;
-
--- name: UpdateUserName :one
-UPDATE users
-SET name = ?
-WHERE id = ?
-RETURNING *;

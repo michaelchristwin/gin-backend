@@ -79,9 +79,11 @@ func (q *Queries) ListUsers(ctx context.Context, arg ListUsersParams) ([]User, e
 }
 
 const updateUser = `-- name: UpdateUser :one
-UPDATE users 
-SET name = ?, email = ? 
-WHERE id = ? 
+UPDATE users
+SET
+    name = COALESCE(?, name),
+    email = COALESCE(?, email)
+WHERE id = ?
 RETURNING id, name, email
 `
 
@@ -93,44 +95,6 @@ type UpdateUserParams struct {
 
 func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) (User, error) {
 	row := q.db.QueryRowContext(ctx, updateUser, arg.Name, arg.Email, arg.ID)
-	var i User
-	err := row.Scan(&i.ID, &i.Name, &i.Email)
-	return i, err
-}
-
-const updateUserEmail = `-- name: UpdateUserEmail :one
-UPDATE users
-SET email = ?
-WHERE id = ?
-RETURNING id, name, email
-`
-
-type UpdateUserEmailParams struct {
-	Email string
-	ID    int64
-}
-
-func (q *Queries) UpdateUserEmail(ctx context.Context, arg UpdateUserEmailParams) (User, error) {
-	row := q.db.QueryRowContext(ctx, updateUserEmail, arg.Email, arg.ID)
-	var i User
-	err := row.Scan(&i.ID, &i.Name, &i.Email)
-	return i, err
-}
-
-const updateUserName = `-- name: UpdateUserName :one
-UPDATE users
-SET name = ?
-WHERE id = ?
-RETURNING id, name, email
-`
-
-type UpdateUserNameParams struct {
-	Name string
-	ID   int64
-}
-
-func (q *Queries) UpdateUserName(ctx context.Context, arg UpdateUserNameParams) (User, error) {
-	row := q.db.QueryRowContext(ctx, updateUserName, arg.Name, arg.ID)
 	var i User
 	err := row.Scan(&i.ID, &i.Name, &i.Email)
 	return i, err

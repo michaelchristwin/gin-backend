@@ -12,7 +12,7 @@ type UserService interface {
 	GetUser(ctx context.Context, id int64) (*model.User, error)
 	ListUsers(ctx context.Context, limit, offset int64) ([]model.User, error)
 	DeleteUser(ctx context.Context, id int64) error
-	UpdateUser(ctx context.Context, user *model.User) (*model.User, error)
+	UpdateUser(ctx context.Context, req *model.UpdateUserRequest, id int64) (*model.User, error)
 }
 
 type userService struct {
@@ -41,6 +41,6 @@ func (s *userService) DeleteUser(ctx context.Context, id int64) error {
 
 }
 
-func (s *userService) UpdateUser(ctx context.Context, user *model.User) (*model.User, error) {
-	return s.repo.Update(ctx, user)
+func (s *userService) UpdateUser(ctx context.Context, req *model.UpdateUserRequest, id int64) (*model.User, error) {
+	return s.repo.Update(ctx, req, id)
 }
