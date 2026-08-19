@@ -147,5 +147,7 @@ func (h *UserHandler) ListUsers(c *gin.Context) {
 		c.Error(middleware.Internal(err))
 		return
 	}
-	c.JSON(http.StatusOK, users)
+	c.JSON(http.StatusOK, gin.H{"data": users, "meta": gin.H{
+		"offset": offset, "limit": limit,
+	}})
 }

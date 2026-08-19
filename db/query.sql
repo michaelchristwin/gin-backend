@@ -19,3 +19,6 @@ RETURNING *;
 DELETE FROM users 
 WHERE id = ?;
 
+-- name: GetTotalUsers :many
+SELECT COUNT(*)
+FROM users;
