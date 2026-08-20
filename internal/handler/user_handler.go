@@ -88,7 +88,7 @@ func (h *UserHandler) UpdateUser(c *gin.Context) {
 
 	user, err := h.service.UpdateUser(c.Request.Context(), &input, id)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		c.Error(middleware.Internal(err))
 		return
 	}
 	c.JSON(http.StatusOK, user)
