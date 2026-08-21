@@ -8,9 +8,10 @@ import (
 )
 
 type UserRepository interface {
-	Create(ctx context.Context, name, email string) (*model.User, error)
+	Create(ctx context.Context, email, password_hash string) (*model.User, error)
 	Delete(ctx context.Context, id int64) error
 	GetById(ctx context.Context, id int64) (*model.User, error)
+	GetByEmail(ctx context.Context, email string) (*model.UserWithPassword, error)
 	GetAll(ctx context.Context, limit, offset int64) ([]model.User, error)
 	Update(ctx context.Context, req *model.UpdateUserRequest, id int64) (*model.User, error)
 }
@@ -23,12 +24,12 @@ func NewUserRepository(q *sqlc.Queries) UserRepository {
 	return &userRepository{q: q}
 }
 
-func (r *userRepository) Create(ctx context.Context, name, email string) (*model.User, error) {
-	row, err := r.q.CreateUser(ctx, sqlc.CreateUserParams{Name: name, Email: email})
+func (r *userRepository) Create(ctx context.Context, email, password_hash string) (*model.User, error) {
+	row, err := r.q.CreateUser(ctx, sqlc.CreateUserParams{Email: email, PasswordHash: password_hash})
 	if err != nil {
 		return nil, err
 	}
-	return &model.User{ID: row.ID, Name: row.Name, Email: row.Email}, nil
+	return &model.User{ID: row.ID, Email: row.Email, CreatedAt: row.CreatedAt}, nil
 }
 
 func (r *userRepository) Delete(ctx context.Context, id int64) error {
@@ -44,7 +45,16 @@ func (r *userRepository) GetById(ctx context.Context, id int64) (*model.User, er
 	if err != nil {
 		return nil, err
 	}
-	return &model.User{ID: row.ID, Name: row.Name, Email: row.Email}, nil
+	return &model.User{ID: row.ID, Email: row.Email, CreatedAt: row.CreatedAt}, nil
+}
+
+func (r *userRepository) GetByEmail(ctx context.Context, email string) (*model.UserWithPassword, error) {
+	row, err := r.q.GetUserByEmail(ctx, email)
+	if err != nil {
+		return nil, err
+	}
+	return &model.UserWithPassword{ID: row.ID, Email: row.Email, PasswordHash: row.PasswordHash, CreatedAt: row.CreatedAt}, nil
+
 }
 
 func (r *userRepository) GetAll(ctx context.Context, limit, offset int64) ([]model.User, error) {
@@ -54,7 +64,7 @@ func (r *userRepository) GetAll(ctx context.Context, limit, offset int64) ([]mod
 	}
 	users := make([]model.User, len(rows))
 	for i, row := range rows {
-		users[i] = model.User{ID: row.ID, Name: row.Name, Email: row.Email}
+		users[i] = model.User{ID: row.ID, Email: row.Email}
 	}
 	return users, nil
 }
@@ -62,19 +72,19 @@ func (r *userRepository) GetAll(ctx context.Context, limit, offset int64) ([]mod
 func (r *userRepository) Update(ctx context.Context, req *model.UpdateUserRequest, id int64) (*model.User, error) {
 	row, err := r.q.UpdateUser(ctx, sqlc.UpdateUserParams{
 		ID: id,
-		Name: sql.NullString{
-			String: deref(req.Name),
-			Valid:  req.Name != nil,
-		},
 		Email: sql.NullString{
 			String: deref(req.Email),
 			Valid:  req.Email != nil,
+		},
+		PasswordHash: sql.NullString{
+			String: deref(req.PasswordHash),
+			Valid:  req.PasswordHash != nil,
 		},
 	})
 	if err != nil {
 		return nil, err
 	}
-	return &model.User{ID: row.ID, Name: row.Name, Email: row.Email}, nil
+	return &model.User{ID: row.ID, Email: row.Email, CreatedAt: row.CreatedAt}, nil
 }
 
 func deref(s *string) string {

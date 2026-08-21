@@ -1,12 +1,26 @@
 package model
 
+import "time"
+
 type User struct {
-	ID    int64  `json:"id"`
-	Name  string `json:"name" binding:"required"`
-	Email string `json:"email" binding:"required,email"`
+	ID        int64     `json:"id"`
+	Email     string    `json:"email"`
+	CreatedAt time.Time `json:"created_at"`
+}
+
+type UserWithPassword struct {
+	ID           int64     `json:"id"`
+	Email        string    `json:"email"`
+	PasswordHash string    `json:"password_hash"`
+	CreatedAt    time.Time `json:"created_at"`
 }
 
 type UpdateUserRequest struct {
-	Name  *string `json:"name"`
-	Email *string `json:"email"`
+	Email        *string `json:"email"`
+	PasswordHash *string `json:"password_hash"`
+}
+
+type CreateUserRequest struct {
+	Email    string `json:"email"`
+	Password string `json:"password_hash"`
 }

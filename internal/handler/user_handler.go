@@ -11,6 +11,7 @@ import (
 	"gin-backend/internal/model"
 	"gin-backend/internal/service"
 
+	"github.com/alexedwards/argon2id"
 	"github.com/gin-gonic/gin"
 )
 
@@ -31,15 +32,20 @@ func (h *UserHandler) RegisterRoutes(r *gin.RouterGroup) {
 }
 
 func (h *UserHandler) CreateUser(c *gin.Context) {
-	var input model.User
+	var input model.CreateUserRequest
 	if err := c.ShouldBindJSON(&input); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-
-	user, err := h.service.RegisterUser(c.Request.Context(), input.Name, input.Email)
+	passwordHash, err := argon2id.CreateHash(input.Password, argon2id.DefaultParams)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		c.Error(middleware.Internal(err))
+		return
+	}
+
+	user, err := h.service.RegisterUser(c.Request.Context(), input.Email, passwordHash)
+	if err != nil {
+		c.Error(middleware.Internal(err))
 		return
 	}
 

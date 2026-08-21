@@ -4,8 +4,19 @@
 
 package db
 
+import (
+	"time"
+)
+
+type Session struct {
+	ID        string
+	UserID    int64
+	ExpiresAt time.Time
+}
+
 type User struct {
-	ID    int64
-	Name  string
-	Email string
+	ID           int64
+	Email        string
+	PasswordHash string
+	CreatedAt    time.Time
 }

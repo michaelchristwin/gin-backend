@@ -6,7 +6,10 @@ INSERT INTO users (
 RETURNING *;
 
 -- name: GetUser :one
-SELECT *
+SELECT
+    id,
+    email,
+    created_at
 FROM users
 WHERE id = ?
 LIMIT 1;
@@ -18,7 +21,10 @@ WHERE email = ?
 LIMIT 1;
 
 -- name: ListUsers :many
-SELECT *
+SELECT
+    id,
+    email,
+    created_at
 FROM users
 ORDER BY id
 LIMIT ? OFFSET ?;
