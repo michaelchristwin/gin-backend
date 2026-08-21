@@ -24,3 +24,7 @@ type CreateUserRequest struct {
 	Email    string `json:"email"`
 	Password string `json:"password_hash"`
 }
+
+type TotalUsers struct {
+	Total int64 `json:"total"`
+}

@@ -14,6 +14,7 @@ type UserRepository interface {
 	GetByEmail(ctx context.Context, email string) (*model.UserWithPassword, error)
 	GetAll(ctx context.Context, limit, offset int64) ([]model.User, error)
 	Update(ctx context.Context, req *model.UpdateUserRequest, id int64) (*model.User, error)
+	Count(ctx context.Context) (*model.TotalUsers, error)
 }
 
 type userRepository struct {
@@ -85,6 +86,14 @@ func (r *userRepository) Update(ctx context.Context, req *model.UpdateUserReques
 		return nil, err
 	}
 	return &model.User{ID: row.ID, Email: row.Email, CreatedAt: row.CreatedAt}, nil
+}
+
+func (r *userRepository) Count(ctx context.Context) (*model.TotalUsers, error) {
+	count, err := r.q.GetTotalUsers(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return &model.TotalUsers{Total: count}, nil
 }
 
 func deref(s *string) string {

@@ -14,6 +14,7 @@ type UserService interface {
 	ListUsers(ctx context.Context, limit, offset int64) ([]model.User, error)
 	DeleteUser(ctx context.Context, id int64) error
 	UpdateUser(ctx context.Context, req *model.UpdateUserRequest, id int64) (*model.User, error)
+	GetTotalUsers(ctx context.Context) (*model.TotalUsers, error)
 }
 
 type userService struct {
@@ -47,4 +48,8 @@ func (s *userService) DeleteUser(ctx context.Context, id int64) error {
 
 func (s *userService) UpdateUser(ctx context.Context, req *model.UpdateUserRequest, id int64) (*model.User, error) {
 	return s.repo.Update(ctx, req, id)
+}
+
+func (s *userService) GetTotalUsers(ctx context.Context) (*model.TotalUsers, error) {
+	return s.repo.Count(ctx)
 }
