@@ -23,48 +23,48 @@ func NewSessionRepository(q *sqlc.Queries) SessionRepository {
 	return &sessionRepository{q: q}
 }
 
-func (s *sessionRepository) Create(ctx context.Context, session *model.Session) (*model.Session, error) {
-	row, err := s.q.CreateSession(ctx, sqlc.CreateSessionParams{ID: session.ID, UserID: session.UserID, ExpiresAt: session.ExpiresAt})
+func (r *sessionRepository) Create(ctx context.Context, session *model.Session) (*model.Session, error) {
+	row, err := r.q.CreateSession(ctx, sqlc.CreateSessionParams{ID: session.ID, UserID: session.UserID, ExpiresAt: session.ExpiresAt})
 	if err != nil {
 		return nil, err
 	}
 	return &model.Session{ID: row.ID, UserID: row.UserID, ExpiresAt: row.ExpiresAt}, nil
 }
 
-func (s *sessionRepository) GetById(ctx context.Context, id string) (*model.Session, error) {
-	row, err := s.q.GetSession(ctx, id)
+func (r *sessionRepository) GetById(ctx context.Context, id string) (*model.Session, error) {
+	row, err := r.q.GetSession(ctx, id)
 	if err != nil {
 		return nil, err
 	}
 	return &model.Session{ID: row.ID, UserID: row.UserID, ExpiresAt: row.ExpiresAt}, nil
 }
 
-func (s *sessionRepository) Delete(ctx context.Context, id string) error {
-	err := s.q.DeleteSession(ctx, id)
+func (r *sessionRepository) Delete(ctx context.Context, id string) error {
+	err := r.q.DeleteSession(ctx, id)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (s *sessionRepository) DeleteUserSessions(ctx context.Context, userID int64) error {
-	err := s.q.DeleteUserSessions(ctx, userID)
+func (r *sessionRepository) DeleteUserSessions(ctx context.Context, userID int64) error {
+	err := r.q.DeleteUserSessions(ctx, userID)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (s *sessionRepository) DeleteExpiredSessions(ctx context.Context) error {
-	err := s.q.DeleteExpiredSessions(ctx)
+func (r *sessionRepository) DeleteExpiredSessions(ctx context.Context) error {
+	err := r.q.DeleteExpiredSessions(ctx)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (s *sessionRepository) GetSessionWithUser(ctx context.Context, id string) (*model.SessionWithUser, error) {
-	row, err := s.q.GetSessionWithUser(ctx, id)
+func (r *sessionRepository) GetSessionWithUser(ctx context.Context, id string) (*model.SessionWithUser, error) {
+	row, err := r.q.GetSessionWithUser(ctx, id)
 	if err != nil {
 		return nil, err
 	}

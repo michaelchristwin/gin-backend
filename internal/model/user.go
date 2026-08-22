@@ -22,7 +22,7 @@ type UpdateUserRequest struct {
 
 type CreateUserRequest struct {
 	Email    string `json:"email"`
-	Password string `json:"password_hash"`
+	Password string `json:"password"`
 }
 
 type TotalUsers struct {
