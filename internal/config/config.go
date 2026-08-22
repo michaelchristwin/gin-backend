@@ -18,7 +18,7 @@ func Load() *Config {
 	}
 	return &Config{
 		Port:  getEnv("PORT", "8080"),
-		DBDSN: getEnv("DBDSN", "file:app.db?_foreign_keys=on"),
+		DBDSN: getEnv("DBDSN", "file:data/app.db?_foreign_keys=on&_journal_mode=WAL&_busy_timeout=5000"),
 	}
 }
 
