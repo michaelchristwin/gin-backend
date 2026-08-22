@@ -12,7 +12,7 @@ type SessionRepository interface {
 	Delete(ctx context.Context, id string) error
 	DeleteUserSessions(ctx context.Context, userID int64) error
 	DeleteExpiredSessions(ctx context.Context) error
-	GetSessionWithUser(ctx context.Context) error
+	GetSessionWithUser(ctx context.Context, id string) (*model.SessionWithUser, error)
 }
 
 type sessionRepository struct {
@@ -63,4 +63,16 @@ func (s *sessionRepository) DeleteExpiredSessions(ctx context.Context) error {
 	return nil
 }
 
-	GetSessionWithUser(ctx context.Context) error
+func (s *sessionRepository) GetSessionWithUser(ctx context.Context, id string) (*model.SessionWithUser, error) {
+	row, err := s.q.GetSessionWithUser(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	return &model.SessionWithUser{
+		SessionID:    row.SessionID,
+		UserID:       row.UserID,
+		Email:        row.Email,
+		PasswordHash: row.PasswordHash,
+		CreatedAt:    row.CreatedAt,
+		ExpiresAt:    row.ExpiresAt}, nil
+}
