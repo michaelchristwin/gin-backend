@@ -7,6 +7,8 @@ import (
 	"gin-backend/internal/handler"
 	"gin-backend/internal/repository"
 	"gin-backend/internal/service"
+	runner "gin-backend/sqlc"
+	"path/filepath"
 
 	_ "modernc.org/sqlite" // pure-Go sqlite driver (no CGO needed)
 
@@ -24,7 +26,13 @@ import (
 
 func main() {
 	cfg := config.Load()
+	if err := os.MkdirAll(filepath.Dir(cfg.DBPath), 0755); err != nil {
+		log.Fatalf("creating db directory: %v", err)
+	}
 
+	if err := runner.RunMigrations(cfg.DBPath, runner.MigrationsFS); err != nil {
+		log.Fatalf("migration failed: %v", err)
+	}
 	db, err := sql.Open("sqlite", cfg.DBDSN)
 	if err != nil {
 		log.Fatal(err)

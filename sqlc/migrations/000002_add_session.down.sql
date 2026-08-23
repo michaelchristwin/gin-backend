@@ -1,0 +1,13 @@
+DROP TABLE sessions;
+
+ALTER TABLE users
+DROP COLUMN created_at;
+
+ALTER TABLE users
+DROP COLUMN password_hash;
+
+ALTER TABLE users
+DROP COLUMN email;
+
+ALTER TABLE users
+ADD COLUMN name TEXT NOT NULL;
