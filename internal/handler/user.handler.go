@@ -11,7 +11,6 @@ import (
 	"gin-backend/internal/model"
 	"gin-backend/internal/service"
 
-	"github.com/alexedwards/argon2id"
 	"github.com/gin-gonic/gin"
 )
 
@@ -24,32 +23,10 @@ func NewUserHandler(s service.UserService) *UserHandler {
 }
 
 func (h *UserHandler) RegisterRoutes(r *gin.RouterGroup) {
-	r.POST("/users", h.CreateUser)
 	r.GET("/users/:id", h.GetUser)
 	r.DELETE("/users/:id", h.DeleteUser)
 	r.GET("/users", h.ListUsers)
 	r.PATCH("/users/:id", h.UpdateUser)
-}
-
-func (h *UserHandler) CreateUser(c *gin.Context) {
-	var input model.UserRequest
-	if err := c.ShouldBindJSON(&input); err != nil {
-		c.Error(middleware.BadRequest("Bad request", err))
-		return
-	}
-	passwordHash, err := argon2id.CreateHash(input.Password, argon2id.DefaultParams)
-	if err != nil {
-		c.Error(middleware.Internal(err))
-		return
-	}
-
-	user, err := h.service.RegisterUser(c.Request.Context(), input.Email, passwordHash)
-	if err != nil {
-		c.Error(middleware.Internal(err))
-		return
-	}
-
-	c.JSON(http.StatusCreated, user)
 }
 
 func (h *UserHandler) GetUser(c *gin.Context) {

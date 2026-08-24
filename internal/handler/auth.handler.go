@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/alexedwards/argon2id"
 	"github.com/gin-gonic/gin"
 )
 
@@ -20,6 +21,7 @@ func NewAuthHandler(userService service.UserService, authService service.AuthSer
 }
 
 func (h *AuthHandler) RegisterRoutes(r *gin.RouterGroup) {
+	r.POST("/auth/register", h.RegisterUser)
 	r.POST("/auth/login", h.Login)
 }
 
@@ -40,4 +42,25 @@ func (h *AuthHandler) Login(c *gin.Context) {
 	c.SetCookie("sessionId", string(session.ID), maxAge, "/", "", true, true)
 	c.JSON(http.StatusOK, gin.H{"message": "Login successful",
 		"user": gin.H{"id": session.UserID, "email": input.Email}})
+}
+
+func (h *AuthHandler) RegisterUser(c *gin.Context) {
+	var input model.UserRequest
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.Error(middleware.BadRequest("Bad request", err))
+		return
+	}
+	passwordHash, err := argon2id.CreateHash(input.Password, argon2id.DefaultParams)
+	if err != nil {
+		c.Error(middleware.Internal(err))
+		return
+	}
+
+	user, err := h.userService.RegisterUser(c.Request.Context(), input.Email, passwordHash)
+	if err != nil {
+		c.Error(middleware.Internal(err))
+		return
+	}
+
+	c.JSON(http.StatusCreated, user)
 }
