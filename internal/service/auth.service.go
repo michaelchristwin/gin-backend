@@ -13,6 +13,7 @@ import (
 
 type AuthService interface {
 	Login(ctx context.Context, userReq model.UserRequest) (*model.Session, error)
+	Logout(ctx context.Context, sessionId string) error
 }
 
 type authService struct {
@@ -43,4 +44,12 @@ func (s *authService) Login(ctx context.Context, userReq model.UserRequest) (*mo
 	}
 	expiresAt := time.Now().Add(24 * time.Hour)
 	return s.sessionRepo.Create(ctx, &model.Session{ID: sessionID, UserID: user.ID, ExpiresAt: expiresAt})
+}
+
+func (s *authService) Logout(ctx context.Context, sessionId string) error {
+	err := s.sessionRepo.Delete(ctx, sessionId)
+	if err != nil {
+		return err
+	}
+	return nil
 }

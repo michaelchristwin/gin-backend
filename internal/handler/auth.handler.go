@@ -23,6 +23,7 @@ func NewAuthHandler(userService service.UserService, authService service.AuthSer
 func (h *AuthHandler) RegisterRoutes(r *gin.RouterGroup) {
 	r.POST("/auth/register", h.RegisterUser)
 	r.POST("/auth/login", h.Login)
+	r.POST("/auth/logout", h.Logout)
 }
 
 func (h *AuthHandler) Login(c *gin.Context) {
@@ -63,4 +64,20 @@ func (h *AuthHandler) RegisterUser(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusCreated, user)
+}
+
+func (h *AuthHandler) Logout(c *gin.Context) {
+	var input model.DeleteSessionReq
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.Error(middleware.BadRequest("Bad request", err))
+		return
+	}
+
+	err := h.authservice.Logout(c.Request.Context(), input.SessionID)
+	if err != nil {
+		c.Error(middleware.Internal(err))
+		return
+	}
+	c.SetCookie("sessionId", "", -1, "/", "", true, true)
+	c.Status(http.StatusNoContent)
 }
