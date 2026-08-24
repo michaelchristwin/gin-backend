@@ -1,0 +1,43 @@
+package handler
+
+import (
+	"gin-backend/internal/middleware"
+	"gin-backend/internal/model"
+	"gin-backend/internal/service"
+	"net/http"
+	"time"
+
+	"github.com/gin-gonic/gin"
+)
+
+type AuthHandler struct {
+	authservice service.AuthService
+	userService service.UserService
+}
+
+func NewAuthHandler(userService service.UserService, authService service.AuthService) *AuthHandler {
+	return &AuthHandler{authservice: authService, userService: userService}
+}
+
+func (h *AuthHandler) RegisterRoutes(r *gin.RouterGroup) {
+	r.POST("/auth/login", h.Login)
+}
+
+func (h *AuthHandler) Login(c *gin.Context) {
+	var input model.UserRequest
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.Error(middleware.BadRequest("Bad request", err))
+		return
+	}
+	session, err := h.authservice.Login(c.Request.Context(), input)
+	if err != nil {
+		c.Error(middleware.Internal(err))
+		return
+	}
+
+	maxAge := int(time.Until(session.ExpiresAt).Seconds())
+
+	c.SetCookie("sessionId", string(session.ID), maxAge, "/", "", true, true)
+	c.JSON(http.StatusOK, gin.H{"message": "Login successful",
+		"user": gin.H{"id": session.UserID, "email": input.Email}})
+}

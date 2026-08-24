@@ -12,7 +12,7 @@ import (
 )
 
 type AuthService interface {
-	Login(ctx context.Context, userReq model.CreateUserRequest) (*model.Session, error)
+	Login(ctx context.Context, userReq model.UserRequest) (*model.Session, error)
 }
 
 type authService struct {
@@ -25,7 +25,7 @@ func NewAuthService(userRepo repository.UserRepository,
 	return &authService{userRepo: userRepo, sessionRepo: sessionRepo}
 }
 
-func (s *authService) Login(ctx context.Context, userReq model.CreateUserRequest) (*model.Session, error) {
+func (s *authService) Login(ctx context.Context, userReq model.UserRequest) (*model.Session, error) {
 	user, err := s.userRepo.GetByEmail(ctx, userReq.Email)
 	if err != nil {
 		return nil, errors.New("Invalid credentials")

@@ -32,9 +32,9 @@ func (h *UserHandler) RegisterRoutes(r *gin.RouterGroup) {
 }
 
 func (h *UserHandler) CreateUser(c *gin.Context) {
-	var input model.CreateUserRequest
+	var input model.UserRequest
 	if err := c.ShouldBindJSON(&input); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.Error(middleware.BadRequest("Bad request", err))
 		return
 	}
 	passwordHash, err := argon2id.CreateHash(input.Password, argon2id.DefaultParams)
@@ -153,7 +153,8 @@ func (h *UserHandler) ListUsers(c *gin.Context) {
 		c.Error(middleware.Internal(err))
 		return
 	}
+	count, err := h.service.GetTotalUsers(c.Request.Context())
 	c.JSON(http.StatusOK, gin.H{"data": users, "meta": gin.H{
-		"offset": offset, "limit": limit,
+		"offset": offset, "limit": limit, "total": count.Total,
 	}})
 }

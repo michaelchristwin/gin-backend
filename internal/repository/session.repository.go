@@ -69,10 +69,9 @@ func (r *sessionRepository) GetSessionWithUser(ctx context.Context, id string) (
 		return nil, err
 	}
 	return &model.SessionWithUser{
-		SessionID:    row.SessionID,
-		UserID:       row.UserID,
-		Email:        row.Email,
-		PasswordHash: row.PasswordHash,
-		CreatedAt:    row.CreatedAt,
-		ExpiresAt:    row.ExpiresAt}, nil
+		SessionID: row.SessionID,
+		UserID:    row.UserID,
+		Email:     row.Email,
+		CreatedAt: row.CreatedAt,
+		ExpiresAt: row.ExpiresAt}, nil
 }

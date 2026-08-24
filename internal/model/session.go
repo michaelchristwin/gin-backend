@@ -14,10 +14,10 @@ type SessionReq struct {
 }
 
 type SessionWithUser struct {
-	SessionID    string    `json:"session_id"`
-	UserID       int64     `json:"user_id"`
-	ExpiresAt    time.Time `json:"expires_at"`
-	Email        string    `json:"email"`
-	PasswordHash string    `json:"password_hash"`
-	CreatedAt    time.Time `json:"created_at"`
+	UserID    int64     `json:"user_id"`
+	SessionID string    `json:"session_id"`
+	ExpiresAt time.Time `json:"expires_at"`
+	Email     string    `json:"email"`
+
+	CreatedAt time.Time `json:"created_at"`
 }
