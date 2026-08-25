@@ -5,6 +5,7 @@ import (
 	"gin-backend/internal/config"
 	sqlc "gin-backend/internal/db"
 	"gin-backend/internal/handler"
+	"gin-backend/internal/middleware"
 	"gin-backend/internal/repository"
 	"gin-backend/internal/service"
 	runner "gin-backend/sqlc"
@@ -48,6 +49,7 @@ func main() {
 	authHandler := handler.NewAuthHandler(userService, authService)
 
 	router := gin.Default()
+	router.Use(middleware.ErrorHandler())
 	api := router.Group("/api/v1")
 
 	router.GET("/", func(c *gin.Context) {
