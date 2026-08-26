@@ -45,8 +45,10 @@ func main() {
 	userService := service.NewUserService(userRepo)
 	userHandler := handler.NewUserHandler(userService)
 	sessionRepo := repository.NewSessionRepository(queries)
+	sessionService := service.NewSessionService(sessionRepo)
 	authService := service.NewAuthService(userRepo, sessionRepo)
 	authHandler := handler.NewAuthHandler(userService, authService)
+	authMiddleware := middleware.NewAuthMiddleware(sessionService, userService)
 
 	router := gin.Default()
 	router.Use(middleware.ErrorHandler())
@@ -56,7 +58,7 @@ func main() {
 		c.String(http.StatusOK, "Welcome Gin Server")
 	})
 	userHandler.RegisterRoutes(api)
-	authHandler.RegisterRoutes(api)
+	authHandler.RegisterRoutes(api, authMiddleware)
 	// Catch-all route
 	router.NoRoute(func(ctx *gin.Context) {
 		ctx.JSON(http.StatusNotFound, gin.H{

@@ -12,12 +12,12 @@ const (
 )
 
 type AuthMiddleware struct {
-	sessionService service.AuthService
+	sessionService service.SessionService
 	userService    service.UserService
 }
 
 func NewAuthMiddleware(
-	sessionService service.AuthService,
+	sessionService service.SessionService,
 	userService service.UserService,
 ) *AuthMiddleware {
 	return &AuthMiddleware{

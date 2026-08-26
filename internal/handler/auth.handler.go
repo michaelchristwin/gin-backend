@@ -20,10 +20,14 @@ func NewAuthHandler(userService service.UserService, authService service.AuthSer
 	return &AuthHandler{authservice: authService, userService: userService}
 }
 
-func (h *AuthHandler) RegisterRoutes(r *gin.RouterGroup) {
+func (h *AuthHandler) RegisterRoutes(r *gin.RouterGroup, authMiddleware *middleware.AuthMiddleware) {
 	r.POST("/auth/register", h.RegisterUser)
 	r.POST("/auth/login", h.Login)
-	r.POST("/auth/logout", h.Logout)
+	protected := r.Group("/")
+	protected.Use(authMiddleware.RequireAuth())
+	{
+		protected.POST("/auth/logout", h.Logout)
+	}
 }
 
 func (h *AuthHandler) Login(c *gin.Context) {
