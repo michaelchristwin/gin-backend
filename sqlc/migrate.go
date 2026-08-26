@@ -1,32 +1,26 @@
 package sqlc
 
 import (
+	"database/sql"
 	"embed"
-	"errors"
-	"fmt"
+	"log"
 
-	"github.com/golang-migrate/migrate/v4"
-	_ "github.com/golang-migrate/migrate/v4/database/sqlite"
-	"github.com/golang-migrate/migrate/v4/source/iofs"
+	goose "github.com/pressly/goose/v3"
+	_ "modernc.org/sqlite" // pure-Go sqlite driver (no CGO needed)
 )
 
-func RunMigrations(dbPath string, migrationsFS embed.FS) error {
-	sourceDriver, err := iofs.New(migrationsFS, "migrations")
-	if err != nil {
-		return fmt.Errorf("loading migration source: %w", err)
+//go:embed migrations/*.sql
+var embedMigrations embed.FS
+
+func RunMigrations(db *sql.DB) error {
+	goose.SetBaseFS(embedMigrations)
+	if err := goose.SetDialect("sqlite3"); err != nil {
+		log.Fatal(err)
 	}
 
-	m, err := migrate.NewWithSourceInstance(
-		"iofs",
-		sourceDriver,
-		fmt.Sprintf("sqlite://%s", dbPath),
-	)
-	if err != nil {
-		return fmt.Errorf("initializing migrate instance: %w", err)
-	}
+	if err := goose.Up(db, "migrations"); err != nil {
+		log.Fatal(err)
 
-	if err := m.Up(); err != nil && !errors.Is(err, migrate.ErrNoChange) {
-		return fmt.Errorf("running migrations: %w", err)
 	}
 
 	return nil

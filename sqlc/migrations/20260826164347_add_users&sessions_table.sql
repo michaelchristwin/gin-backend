@@ -1,0 +1,19 @@
+-- +goose Up
+CREATE TABLE users (
+    id INTEGER PRIMARY KEY,
+    email TEXT NOT NULL UNIQUE,
+    password_hash TEXT NOT NULL,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE sessions (
+    id TEXT PRIMARY KEY,
+    user_id INTEGER NOT NULL,
+    expires_at DATETIME NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+-- +goose Down
+DROP TABLE users;
+
+DROP TABLE sessions;

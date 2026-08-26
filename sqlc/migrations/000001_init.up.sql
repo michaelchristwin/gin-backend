@@ -1,6 +1,0 @@
--- 000001_init.up.sql
-CREATE TABLE users (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT NOT NULL,
-    email TEXT NOT NULL UNIQUE
-);
