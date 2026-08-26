@@ -51,6 +51,9 @@ func InvalidParam(param string, err error) *AppError {
 		err,
 	)
 }
+func Unauthorized(message string, err error) *AppError {
+	return NewAppError(http.StatusUnauthorized, message, err)
+}
 
 // MissingParam covers the case where a required param is empty/absent
 // (e.g. c.Param returns "" or a required query param wasn't set).
