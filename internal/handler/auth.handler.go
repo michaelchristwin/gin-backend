@@ -44,7 +44,7 @@ func (h *AuthHandler) Login(c *gin.Context) {
 
 	maxAge := int(time.Until(session.ExpiresAt).Seconds())
 
-	c.SetCookie("sessionId", string(session.ID), maxAge, "/", "", true, true)
+	c.SetCookie("session_id", string(session.ID), maxAge, "/", "localhost", true, true)
 	c.JSON(http.StatusOK, gin.H{"message": "Login successful",
 		"user": gin.H{"id": session.UserID, "email": input.Email}})
 }
@@ -71,13 +71,9 @@ func (h *AuthHandler) RegisterUser(c *gin.Context) {
 }
 
 func (h *AuthHandler) Logout(c *gin.Context) {
-	var input model.DeleteSessionReq
-	if err := c.ShouldBindJSON(&input); err != nil {
-		c.Error(middleware.BadRequest("Bad request", err))
-		return
-	}
+	session := c.MustGet(middleware.SessionContextKey).(*model.Session)
 
-	err := h.authservice.Logout(c.Request.Context(), input.SessionID)
+	err := h.authservice.Logout(c.Request.Context(), session.ID)
 	if err != nil {
 		c.Error(middleware.Internal(err))
 		return
