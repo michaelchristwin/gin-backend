@@ -22,11 +22,17 @@ func NewUserHandler(s service.UserService) *UserHandler {
 	return &UserHandler{service: s}
 }
 
-func (h *UserHandler) RegisterRoutes(r *gin.RouterGroup) {
+func (h *UserHandler) RegisterRoutes(r *gin.RouterGroup, authMiddleware *middleware.AuthMiddleware) {
 	r.GET("/users/:id", h.GetUser)
-	r.DELETE("/users/:id", h.DeleteUser)
 	r.GET("/users", h.ListUsers)
-	r.PATCH("/users/:id", h.UpdateUser)
+
+	protected := r.Group("/")
+	protected.Use(authMiddleware.RequireAuth())
+	{
+		protected.DELETE("/users/:id", h.DeleteUser)
+		protected.PATCH("/users/:id", h.UpdateUser)
+	}
+
 }
 
 func (h *UserHandler) GetUser(c *gin.Context) {

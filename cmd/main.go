@@ -57,7 +57,7 @@ func main() {
 	router.GET("/", func(c *gin.Context) {
 		c.String(http.StatusOK, "Welcome Gin Server")
 	})
-	userHandler.RegisterRoutes(api)
+	userHandler.RegisterRoutes(api, authMiddleware)
 	authHandler.RegisterRoutes(api, authMiddleware)
 	// Catch-all route
 	router.NoRoute(func(ctx *gin.Context) {
