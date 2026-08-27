@@ -8,8 +8,7 @@ import (
 )
 
 type UserService interface {
-	RegisterUser(ctx context.Context, email, password_hash string) (*model.User, error)
-	GetUser(ctx context.Context, id int64) (*model.User, error)
+	GetUserById(ctx context.Context, id int64) (*model.UserWithPassword, error)
 	GetUserByEmail(ctx context.Context, email string) (*model.UserWithPassword, error)
 	ListUsers(ctx context.Context, limit, offset int64) ([]model.User, error)
 	DeleteUser(ctx context.Context, id int64) error
@@ -25,11 +24,7 @@ func NewUserService(repo repository.UserRepository) UserService {
 	return &userService{repo: repo}
 }
 
-func (s *userService) RegisterUser(ctx context.Context, email, password_hash string) (*model.User, error) {
-	return s.repo.Create(ctx, email, password_hash)
-}
-
-func (s *userService) GetUser(ctx context.Context, id int64) (*model.User, error) {
+func (s *userService) GetUserById(ctx context.Context, id int64) (*model.UserWithPassword, error) {
 	return s.repo.GetById(ctx, id)
 }
 
@@ -47,7 +42,7 @@ func (s *userService) DeleteUser(ctx context.Context, id int64) error {
 }
 
 func (s *userService) UpdateUser(ctx context.Context, req *model.UpdateUserRequest, id int64) (*model.User, error) {
-	return s.repo.Update(ctx, req, id)
+	return s.repo.UpdateUser(ctx, req, id)
 }
 
 func (s *userService) GetTotalUsers(ctx context.Context) (*model.TotalUsers, error) {

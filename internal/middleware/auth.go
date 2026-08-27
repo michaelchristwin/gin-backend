@@ -46,7 +46,7 @@ func (m *AuthMiddleware) RequireAuth() gin.HandlerFunc {
 			return
 		}
 
-		user, err := m.userService.GetUser(
+		user, err := m.userService.GetUserById(
 			c.Request.Context(),
 			session.UserID,
 		)

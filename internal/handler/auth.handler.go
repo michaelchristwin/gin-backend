@@ -7,7 +7,6 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/alexedwards/argon2id"
 	"github.com/gin-gonic/gin"
 )
 
@@ -55,13 +54,7 @@ func (h *AuthHandler) RegisterUser(c *gin.Context) {
 		c.Error(middleware.BadRequest("Bad request", err))
 		return
 	}
-	passwordHash, err := argon2id.CreateHash(input.Password, argon2id.DefaultParams)
-	if err != nil {
-		c.Error(middleware.Internal(err))
-		return
-	}
-
-	user, err := h.userService.RegisterUser(c.Request.Context(), input.Email, passwordHash)
+	user, err := h.authservice.RegisterUser(c.Request.Context(), input)
 	if err != nil {
 		c.Error(middleware.Internal(err))
 		return

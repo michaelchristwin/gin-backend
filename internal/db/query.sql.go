@@ -161,29 +161,6 @@ func (q *Queries) GetTotalUsers(ctx context.Context) (int64, error) {
 	return count, err
 }
 
-const getUser = `-- name: GetUser :one
-SELECT
-    id,
-    email,
-    created_at
-FROM users
-WHERE id = ?
-LIMIT 1
-`
-
-type GetUserRow struct {
-	ID        int64
-	Email     string
-	CreatedAt time.Time
-}
-
-func (q *Queries) GetUser(ctx context.Context, id int64) (GetUserRow, error) {
-	row := q.db.QueryRowContext(ctx, getUser, id)
-	var i GetUserRow
-	err := row.Scan(&i.ID, &i.Email, &i.CreatedAt)
-	return i, err
-}
-
 const getUserByEmail = `-- name: GetUserByEmail :one
 SELECT id, email, password_hash, created_at
 FROM users
@@ -199,6 +176,36 @@ func (q *Queries) GetUserByEmail(ctx context.Context, email string) (User, error
 		&i.Email,
 		&i.PasswordHash,
 		&i.CreatedAt,
+	)
+	return i, err
+}
+
+const getUserById = `-- name: GetUserById :one
+SELECT
+    id,
+    email,
+    created_at,
+    password_hash
+FROM users
+WHERE id = ?
+LIMIT 1
+`
+
+type GetUserByIdRow struct {
+	ID           int64
+	Email        string
+	CreatedAt    time.Time
+	PasswordHash string
+}
+
+func (q *Queries) GetUserById(ctx context.Context, id int64) (GetUserByIdRow, error) {
+	row := q.db.QueryRowContext(ctx, getUserById, id)
+	var i GetUserByIdRow
+	err := row.Scan(
+		&i.ID,
+		&i.Email,
+		&i.CreatedAt,
+		&i.PasswordHash,
 	)
 	return i, err
 }
@@ -245,6 +252,23 @@ func (q *Queries) ListUsers(ctx context.Context, arg ListUsersParams) ([]ListUse
 		return nil, err
 	}
 	return items, nil
+}
+
+const updatePasswordHash = `-- name: UpdatePasswordHash :exec
+UPDATE users
+SET
+    password_hash = ?1
+WHERE id = ?2
+`
+
+type UpdatePasswordHashParams struct {
+	PasswordHash string
+	ID           int64
+}
+
+func (q *Queries) UpdatePasswordHash(ctx context.Context, arg UpdatePasswordHashParams) error {
+	_, err := q.db.ExecContext(ctx, updatePasswordHash, arg.PasswordHash, arg.ID)
+	return err
 }
 
 const updateUser = `-- name: UpdateUser :one

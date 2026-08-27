@@ -10,10 +10,11 @@ import (
 type UserRepository interface {
 	Create(ctx context.Context, email, password_hash string) (*model.User, error)
 	Delete(ctx context.Context, id int64) error
-	GetById(ctx context.Context, id int64) (*model.User, error)
+	GetById(ctx context.Context, id int64) (*model.UserWithPassword, error)
 	GetByEmail(ctx context.Context, email string) (*model.UserWithPassword, error)
 	GetAll(ctx context.Context, limit, offset int64) ([]model.User, error)
-	Update(ctx context.Context, req *model.UpdateUserRequest, id int64) (*model.User, error)
+	UpdateUser(ctx context.Context, req *model.UpdateUserRequest, id int64) (*model.User, error)
+	UpdatePasswordHash(ctx context.Context, userID int64, newPasswordHash string) error
 	Count(ctx context.Context) (*model.TotalUsers, error)
 }
 
@@ -41,12 +42,12 @@ func (r *userRepository) Delete(ctx context.Context, id int64) error {
 	return nil
 }
 
-func (r *userRepository) GetById(ctx context.Context, id int64) (*model.User, error) {
-	row, err := r.q.GetUser(ctx, id)
+func (r *userRepository) GetById(ctx context.Context, id int64) (*model.UserWithPassword, error) {
+	row, err := r.q.GetUserById(ctx, id)
 	if err != nil {
 		return nil, err
 	}
-	return &model.User{ID: row.ID, Email: row.Email, CreatedAt: row.CreatedAt}, nil
+	return &model.UserWithPassword{ID: row.ID, Email: row.Email, PasswordHash: row.PasswordHash, CreatedAt: row.CreatedAt}, nil
 }
 
 func (r *userRepository) GetByEmail(ctx context.Context, email string) (*model.UserWithPassword, error) {
@@ -70,7 +71,7 @@ func (r *userRepository) GetAll(ctx context.Context, limit, offset int64) ([]mod
 	return users, nil
 }
 
-func (r *userRepository) Update(ctx context.Context, req *model.UpdateUserRequest, id int64) (*model.User, error) {
+func (r *userRepository) UpdateUser(ctx context.Context, req *model.UpdateUserRequest, id int64) (*model.User, error) {
 	row, err := r.q.UpdateUser(ctx, sqlc.UpdateUserParams{
 		ID: id,
 		Email: sql.NullString{
@@ -82,6 +83,13 @@ func (r *userRepository) Update(ctx context.Context, req *model.UpdateUserReques
 		return nil, err
 	}
 	return &model.User{ID: row.ID, Email: row.Email, CreatedAt: row.CreatedAt}, nil
+}
+
+func (r *userRepository) UpdatePasswordHash(ctx context.Context, userID int64, newPasswordHash string) error {
+	if err := r.q.UpdatePasswordHash(ctx, sqlc.UpdatePasswordHashParams{ID: userID, PasswordHash: newPasswordHash}); err != nil {
+		return err
+	}
+	return nil
 }
 
 func (r *userRepository) Count(ctx context.Context) (*model.TotalUsers, error) {

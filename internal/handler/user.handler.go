@@ -46,7 +46,7 @@ func (h *UserHandler) GetUser(c *gin.Context) {
 		c.Error(middleware.InvalidParam("id", err))
 		return
 	}
-	user, err := h.service.GetUser(c.Request.Context(), id)
+	user, err := h.service.GetUserById(c.Request.Context(), id)
 	if err != nil {
 		if errors.Is(err, context.DeadlineExceeded) {
 			c.JSON(http.StatusGatewayTimeout, gin.H{"error": "request timed out"})

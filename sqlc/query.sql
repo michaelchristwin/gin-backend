@@ -5,11 +5,12 @@ INSERT INTO users (
 ) VALUES (?, ?)
 RETURNING *;
 
--- name: GetUser :one
+-- name: GetUserById :one
 SELECT
     id,
     email,
-    created_at
+    created_at,
+    password_hash
 FROM users
 WHERE id = ?
 LIMIT 1;
@@ -35,6 +36,12 @@ SET
     email = COALESCE(sqlc.narg(email), email)
 WHERE id = sqlc.arg(id)
 RETURNING *;
+
+-- name: UpdatePasswordHash :exec
+UPDATE users
+SET
+    password_hash = sqlc.arg(password_hash)
+WHERE id = sqlc.arg(id);
 
 -- name: DeleteUser :exec
 DELETE FROM users
