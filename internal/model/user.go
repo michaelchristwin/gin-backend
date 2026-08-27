@@ -16,13 +16,12 @@ type UserWithPassword struct {
 }
 
 type UpdateUserRequest struct {
-	Email        *string `json:"email"`
-	PasswordHash *string `json:"password_hash"`
+	Email *string `json:"email" binding:"required,email"`
 }
 
-type UserRequest struct {
-	Email    string `json:"email"`
-	Password string `json:"password"`
+type RegisterRequest struct {
+	Email    string `json:"email" binding:"required"`
+	Password string `json:"password" binding:"required,min=12,max=64"`
 }
 
 type TotalUsers struct {

@@ -77,10 +77,6 @@ func (r *userRepository) Update(ctx context.Context, req *model.UpdateUserReques
 			String: deref(req.Email),
 			Valid:  req.Email != nil,
 		},
-		PasswordHash: sql.NullString{
-			String: deref(req.PasswordHash),
-			Valid:  req.PasswordHash != nil,
-		},
 	})
 	if err != nil {
 		return nil, err

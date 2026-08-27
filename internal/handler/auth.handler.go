@@ -31,7 +31,7 @@ func (h *AuthHandler) RegisterRoutes(r *gin.RouterGroup, authMiddleware *middlew
 }
 
 func (h *AuthHandler) Login(c *gin.Context) {
-	var input model.UserRequest
+	var input model.RegisterRequest
 	if err := c.ShouldBindJSON(&input); err != nil {
 		c.Error(middleware.BadRequest("Bad request", err))
 		return
@@ -50,7 +50,7 @@ func (h *AuthHandler) Login(c *gin.Context) {
 }
 
 func (h *AuthHandler) RegisterUser(c *gin.Context) {
-	var input model.UserRequest
+	var input model.RegisterRequest
 	if err := c.ShouldBindJSON(&input); err != nil {
 		c.Error(middleware.BadRequest("Bad request", err))
 		return

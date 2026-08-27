@@ -32,8 +32,7 @@ LIMIT ? OFFSET ?;
 -- name: UpdateUser :one
 UPDATE users
 SET
-    email = COALESCE(sqlc.narg(email), email),
-    password_hash = COALESCE(sqlc.narg(password_hash), password_hash)
+    email = COALESCE(sqlc.narg(email), email)
 WHERE id = sqlc.arg(id)
 RETURNING *;
 

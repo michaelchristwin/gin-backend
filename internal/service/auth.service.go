@@ -11,8 +11,14 @@ import (
 	"github.com/alexedwards/argon2id"
 )
 
+var (
+	ErrInvalidCredentials = errors.New("invalid credentials")
+	ErrPasswordTooWeak    = errors.New("password does not meet requirements")
+	// ... other auth-specific sentinel errors
+)
+
 type AuthService interface {
-	Login(ctx context.Context, userReq model.UserRequest) (*model.Session, error)
+	Login(ctx context.Context, userReq model.RegisterRequest) (*model.Session, error)
 	Logout(ctx context.Context, sessionId string) error
 }
 
@@ -26,17 +32,17 @@ func NewAuthService(userRepo repository.UserRepository,
 	return &authService{userRepo: userRepo, sessionRepo: sessionRepo}
 }
 
-func (s *authService) Login(ctx context.Context, userReq model.UserRequest) (*model.Session, error) {
+func (s *authService) Login(ctx context.Context, userReq model.RegisterRequest) (*model.Session, error) {
 	user, err := s.userRepo.GetByEmail(ctx, userReq.Email)
 	if err != nil {
-		return nil, errors.New("Invalid credentials")
+		return nil, ErrInvalidCredentials
 	}
 	match, err := argon2id.ComparePasswordAndHash(userReq.Password, user.PasswordHash)
 	if err != nil {
 		return nil, err
 	}
 	if !match {
-		return nil, errors.New("Invalid credentials")
+		return nil, ErrInvalidCredentials
 	}
 	sessionID, err := util.GenerateSessionID()
 	if err != nil {
