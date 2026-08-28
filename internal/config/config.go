@@ -8,9 +8,10 @@ import (
 )
 
 type Config struct {
-	Port   string
-	DBDSN  string
-	DBPath string
+	Port    string
+	DBDSN   string
+	DBPath  string
+	GinMode string
 }
 
 func Load() *Config {
@@ -18,9 +19,10 @@ func Load() *Config {
 		log.Println("No .env file found, using system env vars")
 	}
 	return &Config{
-		Port:   getEnv("PORT", "8080"),
-		DBDSN:  getEnv("DBDSN", "file:data/app.db?_foreign_keys=on&_journal_mode=WAL&_busy_timeout=5000"),
-		DBPath: getEnv("DB_PATH", "data/app.db"),
+		Port:    getEnv("PORT", "8080"),
+		DBDSN:   getEnv("DBDSN", "file:data/app.db?_foreign_keys=on&_journal_mode=WAL&_busy_timeout=5000"),
+		DBPath:  getEnv("DB_PATH", "data/app.db"),
+		GinMode: getEnv("GIN_MODE", "release"),
 	}
 }
 

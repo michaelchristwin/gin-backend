@@ -50,6 +50,7 @@ func main() {
 	authHandler := handler.NewAuthHandler(userService, authService)
 	authMiddleware := middleware.NewAuthMiddleware(sessionService, userService)
 
+	gin.SetMode(cfg.GinMode)
 	router := gin.Default()
 	router.Use(middleware.ErrorHandler())
 	api := router.Group("/api/v1")
