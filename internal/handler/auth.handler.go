@@ -26,6 +26,7 @@ func (h *AuthHandler) RegisterRoutes(r *gin.RouterGroup, authMiddleware *middlew
 	protected.Use(authMiddleware.RequireAuth())
 	{
 		protected.POST("/auth/logout", h.Logout)
+		protected.POST("/auth/change-password", h.UpdatePassword)
 	}
 }
 
@@ -73,4 +74,18 @@ func (h *AuthHandler) Logout(c *gin.Context) {
 	}
 	c.SetCookie("sessionId", "", -1, "/", "", true, true)
 	c.Status(http.StatusNoContent)
+}
+
+func (h *AuthHandler) UpdatePassword(c *gin.Context) {
+	var input model.ChangePasswordRequest
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.Error(middleware.BadRequest("Bad request", err))
+		return
+	}
+	userID := c.MustGet("user_id").(int64)
+	if err := h.authservice.ChangePassword(c.Request.Context(), userID, input.CurrentPassword, input.NewPassword); err != nil {
+		c.Error(middleware.Internal(err))
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"message": "Password updated successfully"})
 }
