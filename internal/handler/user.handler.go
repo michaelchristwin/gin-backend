@@ -23,14 +23,15 @@ func NewUserHandler(s service.UserService) *UserHandler {
 }
 
 func (h *UserHandler) RegisterRoutes(r *gin.RouterGroup, authMiddleware *middleware.AuthMiddleware) {
-	r.GET("/users/:id", h.GetUser)
-	r.GET("/users", h.ListUsers)
+	users := r.Group("/users")
+	users.GET("/", h.ListUsers)
+	users.GET("/:id", h.GetUser)
 
-	protected := r.Group("/")
+	protected := users.Group("/")
 	protected.Use(authMiddleware.RequireAuth())
 	{
-		protected.DELETE("/users/:id", h.DeleteUser)
-		protected.PATCH("/users/:id", h.UpdateUser)
+		protected.DELETE("/:id", h.DeleteUser)
+		protected.PATCH("/:id", h.UpdateUser)
 	}
 
 }

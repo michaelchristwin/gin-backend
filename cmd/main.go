@@ -53,11 +53,12 @@ func main() {
 	gin.SetMode(cfg.GinMode)
 	router := gin.Default()
 	router.Use(middleware.ErrorHandler())
-	api := router.Group("/api/v1")
 
-	router.GET("/", func(c *gin.Context) {
-		c.String(http.StatusOK, "Welcome Gin Server")
+	router.GET("/healthz", func(c *gin.Context) {
+		c.JSON(http.StatusOK, gin.H{"status": "alive"})
 	})
+
+	api := router.Group("/api/v1")
 	userHandler.RegisterRoutes(api, authMiddleware)
 	authHandler.RegisterRoutes(api, authMiddleware)
 	// Catch-all route
