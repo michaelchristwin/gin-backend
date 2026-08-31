@@ -9,6 +9,7 @@ import (
 	"gin-backend/internal/repository"
 	"gin-backend/internal/service"
 	migrator "gin-backend/sqlc"
+	"log/slog"
 	"path/filepath"
 
 	_ "modernc.org/sqlite" // pure-Go sqlite driver (no CGO needed)
@@ -49,11 +50,13 @@ func main() {
 	authService := service.NewAuthService(userRepo, sessionRepo)
 	authHandler := handler.NewAuthHandler(userService, authService)
 	authMiddleware := middleware.NewAuthMiddleware(sessionService, userService)
+	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
 
 	gin.SetMode(cfg.GinMode)
-	router := gin.Default()
+	router := gin.New()
+	router.Use(gin.Recovery())
 	router.Use(middleware.ErrorHandler())
-
+	router.Use(middleware.Logger(logger))
 	router.GET("/healthz", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"status": "alive"})
 	})
