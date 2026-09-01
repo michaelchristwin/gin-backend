@@ -14,7 +14,7 @@ import (
 // AppError lets handlers attach an HTTP status and a safe client-facing
 // message, while still preserving the original error for logging.
 type AppError struct {
-	Code    int    // HTTP status code
+	Status  int    // HTTP status code
 	Message string // Safe message to show the client
 	Err     error  // Underlying error (for logs, not shown to client)
 }
@@ -30,7 +30,7 @@ func (e *AppError) Unwrap() error { return e.Err }
 
 // Helper constructors
 func NewAppError(code int, message string, err error) *AppError {
-	return &AppError{Code: code, Message: message, Err: err}
+	return &AppError{Status: code, Message: message, Err: err}
 }
 
 func NotFound(message string) *AppError {
@@ -104,7 +104,7 @@ func ErrorHandler() gin.HandlerFunc {
 		if appErr, ok := errors.AsType[*AppError](err); ok {
 			// Log full detail server-side
 			log.Printf("handled error: %v", appErr)
-			c.JSON(appErr.Code, gin.H{"error": appErr.Message})
+			c.JSON(appErr.Status, gin.H{"error": appErr.Message})
 			return
 		}
 

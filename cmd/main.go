@@ -42,15 +42,15 @@ func main() {
 	}
 
 	queries := sqlc.New(db)
+	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
 	userRepo := repository.NewUserRepository(queries)
-	userService := service.NewUserService(userRepo)
+	userService := service.NewUserService(userRepo, logger)
 	userHandler := handler.NewUserHandler(userService)
 	sessionRepo := repository.NewSessionRepository(queries)
 	sessionService := service.NewSessionService(sessionRepo)
-	authService := service.NewAuthService(userRepo, sessionRepo)
+	authService := service.NewAuthService(userRepo, sessionRepo, logger)
 	authHandler := handler.NewAuthHandler(userService, authService)
 	authMiddleware := middleware.NewAuthMiddleware(sessionService, userService)
-	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
 
 	gin.SetMode(cfg.GinMode)
 	router := gin.New()

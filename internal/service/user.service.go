@@ -3,6 +3,7 @@ package service
 import (
 	"gin-backend/internal/model"
 	"gin-backend/internal/repository"
+	"log/slog"
 
 	"context"
 )
@@ -17,11 +18,12 @@ type UserService interface {
 }
 
 type userService struct {
-	repo repository.UserRepository
+	repo   repository.UserRepository
+	logger *slog.Logger
 }
 
-func NewUserService(repo repository.UserRepository) UserService {
-	return &userService{repo: repo}
+func NewUserService(repo repository.UserRepository, logger *slog.Logger) UserService {
+	return &userService{repo: repo, logger: logger}
 }
 
 func (s *userService) GetUserById(ctx context.Context, id int64) (*model.UserWithPassword, error) {

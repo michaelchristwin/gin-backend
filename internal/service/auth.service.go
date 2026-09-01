@@ -7,6 +7,7 @@ import (
 	"gin-backend/internal/repository"
 	"gin-backend/internal/util"
 	"gin-backend/internal/validation"
+	"log/slog"
 	"time"
 
 	"github.com/alexedwards/argon2id"
@@ -28,16 +29,18 @@ type AuthService interface {
 type authService struct {
 	repo     repository.UserRepository
 	sessions repository.SessionRepository
+	logger   *slog.Logger
 }
 
 func NewAuthService(repo repository.UserRepository,
-	sessions repository.SessionRepository) AuthService {
-	return &authService{repo: repo, sessions: sessions}
+	sessions repository.SessionRepository, logger *slog.Logger) AuthService {
+	return &authService{repo: repo, sessions: sessions, logger: logger}
 }
 
 func (s *authService) RegisterUser(ctx context.Context, user model.RegisterRequest) (*model.User, error) {
 	passwordHash, err := argon2id.CreateHash(user.Password, argon2id.DefaultParams)
 	if err != nil {
+
 		return nil, ErrInvalidCredentials
 	}
 	if err := validation.Validate(ctx, user.Password); err != nil {
@@ -49,13 +52,24 @@ func (s *authService) RegisterUser(ctx context.Context, user model.RegisterReque
 func (s *authService) Login(ctx context.Context, userReq model.RegisterRequest) (*model.Session, error) {
 	user, err := s.repo.GetByEmail(ctx, userReq.Email)
 	if err != nil {
+		s.logger.Warn("authentication failed",
+			"reason", "invalid_credentials",
+		)
 		return nil, ErrInvalidCredentials
 	}
 	match, err := argon2id.ComparePasswordAndHash(userReq.Password, user.PasswordHash)
 	if err != nil {
+		s.logger.Warn("authentication failed",
+			"user_id", user.ID,
+			"reason", "invalid_credentials",
+		)
 		return nil, err
 	}
 	if !match {
+		s.logger.Warn("authentication failed",
+			"user_id", user.ID,
+			"reason", "invalid_credentials",
+		)
 		return nil, ErrInvalidCredentials
 	}
 	sessionID, err := util.GenerateSessionID()
@@ -77,13 +91,24 @@ func (s *authService) Logout(ctx context.Context, sessionId string) error {
 func (s *authService) ChangePassword(ctx context.Context, userID int64, currentPassword, newPassword string) error {
 	user, err := s.repo.GetById(ctx, userID)
 	if err != nil {
+		s.logger.Warn("authentication failed",
+			"reason", "invalid_credentials",
+		)
 		return err
 	}
 	match, err := argon2id.ComparePasswordAndHash(currentPassword, user.PasswordHash)
 	if err != nil {
+		s.logger.Warn("authentication failed",
+			"user_id", user.ID,
+			"reason", "invalid_credentials",
+		)
 		return err
 	}
 	if !match {
+		s.logger.Warn("authentication failed",
+			"user_id", user.ID,
+			"reason", "invalid_credentials",
+		)
 		return ErrInvalidCredentials
 	}
 	hash, err := argon2id.CreateHash(newPassword, argon2id.DefaultParams)
