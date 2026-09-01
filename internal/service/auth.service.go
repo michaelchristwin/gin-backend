@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"errors"
+	"fmt"
 	"gin-backend/internal/model"
 	"gin-backend/internal/repository"
 	"gin-backend/internal/util"
@@ -16,6 +17,8 @@ import (
 var (
 	ErrInvalidCredentials = errors.New("invalid credentials")
 	ErrPasswordTooWeak    = errors.New("password does not meet requirements")
+	ErrEmailTaken         = errors.New("Email taken")
+	ErrUserNotFound       = errors.New("user not found")
 	// ... other auth-specific sentinel errors
 )
 
@@ -24,6 +27,7 @@ type AuthService interface {
 	Login(ctx context.Context, user model.RegisterRequest) (*model.Session, error)
 	Logout(ctx context.Context, sessionId string) error
 	ChangePassword(ctx context.Context, userID int64, currentPassword, newPassword string) error
+	checkEmailAvailable(ctx context.Context, email string) error
 }
 
 type authService struct {
@@ -37,16 +41,26 @@ func NewAuthService(repo repository.UserRepository,
 	return &authService{repo: repo, sessions: sessions, logger: logger}
 }
 
-func (s *authService) RegisterUser(ctx context.Context, user model.RegisterRequest) (*model.User, error) {
-	passwordHash, err := argon2id.CreateHash(user.Password, argon2id.DefaultParams)
+func (s *authService) RegisterUser(ctx context.Context, req model.RegisterRequest) (*model.User, error) {
+	if err := s.checkEmailAvailable(ctx, req.Email); err != nil {
+		return nil, err // could be ErrEmailTaken or a wrapped infra error
+	}
+	passwordHash, err := argon2id.CreateHash(req.Password, argon2id.DefaultParams)
 	if err != nil {
 
 		return nil, ErrInvalidCredentials
 	}
-	if err := validation.Validate(ctx, user.Password); err != nil {
+	if err := validation.Validate(ctx, req.Password, s.logger); err != nil {
 		return nil, err // e.g. ErrTooShort, ErrPwned
 	}
-	return s.repo.Create(ctx, user.Email, passwordHash)
+	user, err := s.repo.Create(ctx, req.Email, passwordHash)
+	if err != nil {
+		if validation.IsUniqueViolation(err) { // check pg error code 23505, or your driver's equivalent
+			return nil, ErrEmailTaken
+		}
+		return nil, fmt.Errorf("creating user: %w", err)
+	}
+	return user, nil
 }
 
 func (s *authService) Login(ctx context.Context, userReq model.RegisterRequest) (*model.Session, error) {
@@ -119,4 +133,15 @@ func (s *authService) ChangePassword(ctx context.Context, userID int64, currentP
 		return err
 	}
 	return nil
+}
+
+func (s *authService) checkEmailAvailable(ctx context.Context, email string) error {
+	_, err := s.repo.GetByEmail(ctx, email)
+	if err == nil {
+		return ErrEmailTaken // found a user, email is taken
+	}
+	if errors.Is(err, ErrUserNotFound) { // or sql.ErrNoRows, whatever your repo returns
+		return nil // expected — email is available
+	}
+	return fmt.Errorf("checking email availability: %w", err) // real error — propagate it
 }

@@ -55,8 +55,8 @@ func main() {
 	gin.SetMode(cfg.GinMode)
 	router := gin.New()
 	router.Use(gin.Recovery())
-	router.Use(middleware.ErrorHandler())
 	router.Use(middleware.Logger(logger))
+	router.Use(middleware.ErrorHandler())
 	router.GET("/healthz", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"status": "alive"})
 	})

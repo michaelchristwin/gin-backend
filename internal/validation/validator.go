@@ -4,6 +4,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log/slog"
+
+	"modernc.org/sqlite"
 )
 
 const (
@@ -17,7 +20,7 @@ var (
 	ErrPwned    = errors.New("this password has appeared in a known data breach — please choose a different one")
 )
 
-func Validate(ctx context.Context, plaintext string) error {
+func Validate(ctx context.Context, plaintext string, logger *slog.Logger) error {
 	if len([]rune(plaintext)) < MinLength {
 		return ErrTooShort
 	}
@@ -28,10 +31,17 @@ func Validate(ctx context.Context, plaintext string) error {
 	count, err := CheckPwned(ctx, plaintext)
 	if err != nil {
 		// fail open — log and continue rather than blocking the user
-		// logger.Warn("pwned password check failed", "err", err)
+		logger.Warn("pwned password check failed", "err", err)
 	} else if count > 0 {
 		return ErrPwned
 	}
 
 	return nil
+}
+
+func IsUniqueViolation(err error) bool {
+	if sqliteErr, ok := errors.AsType[*sqlite.Error](err); ok {
+		return sqliteErr.Code() == 2067 // SQLITE_CONSTRAINT_UNIQUE
+	}
+	return false
 }
