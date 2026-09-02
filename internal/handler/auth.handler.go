@@ -35,12 +35,12 @@ func (h *AuthHandler) RegisterRoutes(r *gin.RouterGroup, authMiddleware *middlew
 func (h *AuthHandler) Login(c *gin.Context) {
 	var input model.RegisterRequest
 	if err := c.ShouldBindJSON(&input); err != nil {
-		c.Error(middleware.BadRequest("Bad request", err))
+		c.JSON(http.StatusBadRequest, formatValidationError(err))
 		return
 	}
 	session, err := h.authservice.Login(c.Request.Context(), input)
 	if err != nil {
-		c.Error(middleware.Internal(err))
+		respondWithError(c, err)
 		return
 	}
 
@@ -54,15 +54,14 @@ func (h *AuthHandler) Login(c *gin.Context) {
 func (h *AuthHandler) RegisterUser(c *gin.Context) {
 	var input model.RegisterRequest
 	if err := c.ShouldBindJSON(&input); err != nil {
-		c.Error(middleware.BadRequest("Bad request", err))
+		c.JSON(http.StatusBadRequest, formatValidationError(err))
 		return
 	}
 	user, err := h.authservice.RegisterUser(c.Request.Context(), input)
 	if err != nil {
-		c.Error(middleware.Internal(err))
+		respondWithError(c, err)
 		return
 	}
-
 	c.JSON(http.StatusCreated, user)
 }
 
@@ -71,7 +70,7 @@ func (h *AuthHandler) Logout(c *gin.Context) {
 
 	err := h.authservice.Logout(c.Request.Context(), session.ID)
 	if err != nil {
-		c.Error(middleware.Internal(err))
+		respondWithError(c, err)
 		return
 	}
 	c.SetCookie("sessionId", "", -1, "/", "", true, true)
@@ -81,12 +80,12 @@ func (h *AuthHandler) Logout(c *gin.Context) {
 func (h *AuthHandler) UpdatePassword(c *gin.Context) {
 	var input model.ChangePasswordRequest
 	if err := c.ShouldBindJSON(&input); err != nil {
-		c.Error(middleware.BadRequest("Bad request", err))
+		c.JSON(http.StatusBadRequest, formatValidationError(err))
 		return
 	}
 	userID := c.MustGet("user_id").(int64)
 	if err := h.authservice.ChangePassword(c.Request.Context(), userID, input.CurrentPassword, input.NewPassword); err != nil {
-		c.Error(middleware.Internal(err))
+		respondWithError(c, err)
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"message": "Password updated successfully"})

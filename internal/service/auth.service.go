@@ -4,22 +4,16 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"gin-backend/internal/domain"
 	"gin-backend/internal/model"
 	"gin-backend/internal/repository"
+
 	"gin-backend/internal/util"
 	"gin-backend/internal/validation"
 	"log/slog"
 	"time"
 
 	"github.com/alexedwards/argon2id"
-)
-
-var (
-	ErrInvalidCredentials = errors.New("invalid credentials")
-	ErrPasswordTooWeak    = errors.New("password does not meet requirements")
-	ErrEmailTaken         = errors.New("Email taken")
-	ErrUserNotFound       = errors.New("user not found")
-	// ... other auth-specific sentinel errors
 )
 
 type AuthService interface {
@@ -48,7 +42,7 @@ func (s *authService) RegisterUser(ctx context.Context, req model.RegisterReques
 	passwordHash, err := argon2id.CreateHash(req.Password, argon2id.DefaultParams)
 	if err != nil {
 
-		return nil, ErrInvalidCredentials
+		return nil, domain.ErrInvalidCredentials
 	}
 	if err := validation.Validate(ctx, req.Password, s.logger); err != nil {
 		return nil, err // e.g. ErrTooShort, ErrPwned
@@ -56,20 +50,21 @@ func (s *authService) RegisterUser(ctx context.Context, req model.RegisterReques
 	user, err := s.repo.Create(ctx, req.Email, passwordHash)
 	if err != nil {
 		if validation.IsUniqueViolation(err) { // check pg error code 23505, or your driver's equivalent
-			return nil, ErrEmailTaken
+			return nil, domain.ErrEmailTaken
 		}
 		return nil, fmt.Errorf("creating user: %w", err)
 	}
+
 	return user, nil
 }
 
 func (s *authService) Login(ctx context.Context, userReq model.RegisterRequest) (*model.Session, error) {
 	user, err := s.repo.GetByEmail(ctx, userReq.Email)
-	if err != nil {
+	if err == nil {
 		s.logger.Warn("authentication failed",
 			"reason", "invalid_credentials",
 		)
-		return nil, ErrInvalidCredentials
+		return nil, domain.ErrInvalidCredentials
 	}
 	match, err := argon2id.ComparePasswordAndHash(userReq.Password, user.PasswordHash)
 	if err != nil {
@@ -84,7 +79,7 @@ func (s *authService) Login(ctx context.Context, userReq model.RegisterRequest) 
 			"user_id", user.ID,
 			"reason", "invalid_credentials",
 		)
-		return nil, ErrInvalidCredentials
+		return nil, domain.ErrInvalidCredentials
 	}
 	sessionID, err := util.GenerateSessionID()
 	if err != nil {
@@ -123,7 +118,7 @@ func (s *authService) ChangePassword(ctx context.Context, userID int64, currentP
 			"user_id", user.ID,
 			"reason", "invalid_credentials",
 		)
-		return ErrInvalidCredentials
+		return domain.ErrInvalidCredentials
 	}
 	hash, err := argon2id.CreateHash(newPassword, argon2id.DefaultParams)
 	if err != nil {
@@ -138,9 +133,9 @@ func (s *authService) ChangePassword(ctx context.Context, userID int64, currentP
 func (s *authService) checkEmailAvailable(ctx context.Context, email string) error {
 	_, err := s.repo.GetByEmail(ctx, email)
 	if err == nil {
-		return ErrEmailTaken // found a user, email is taken
+		return domain.ErrEmailTaken // found a user, email is taken
 	}
-	if errors.Is(err, ErrUserNotFound) { // or sql.ErrNoRows, whatever your repo returns
+	if errors.Is(err, domain.ErrUserNotFound) { // or sql.ErrNoRows, whatever your repo returns
 		return nil // expected — email is available
 	}
 	return fmt.Errorf("checking email availability: %w", err) // real error — propagate it
