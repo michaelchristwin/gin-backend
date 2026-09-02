@@ -4,7 +4,6 @@ import (
 	"gin-backend/internal/middleware"
 	"gin-backend/internal/model"
 	"gin-backend/internal/service"
-	"log"
 	"net/http"
 	"time"
 
@@ -58,7 +57,7 @@ func (h *AuthHandler) RegisterUser(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, formatValidationError(err))
 		return
 	}
-	log.Println("Passed form validation")
+
 	user, err := h.authservice.RegisterUser(c.Request.Context(), input)
 	if err != nil {
 		respondWithError(c, err)

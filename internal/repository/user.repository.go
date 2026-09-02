@@ -72,7 +72,7 @@ func (r *userRepository) GetAll(ctx context.Context, limit, offset int64) ([]mod
 	}
 	users := make([]model.User, len(rows))
 	for i, row := range rows {
-		users[i] = model.User{ID: row.ID, Email: row.Email}
+		users[i] = model.User{ID: row.ID, Email: row.Email, CreatedAt: row.CreatedAt}
 	}
 	return users, nil
 }

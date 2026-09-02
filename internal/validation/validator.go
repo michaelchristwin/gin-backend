@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"gin-backend/internal/domain"
+	"gin-backend/internal/util"
 	"log/slog"
 
 	"modernc.org/sqlite"
@@ -12,7 +13,7 @@ import (
 var ()
 
 func Validate(ctx context.Context, plaintext string, logger *slog.Logger) error {
-	count, err := CheckPwned(ctx, plaintext)
+	count, err := util.CheckPwned(ctx, plaintext)
 	if err != nil {
 		// fail open — log and continue rather than blocking the user
 		logger.Warn("pwned password check failed", "err", err)
