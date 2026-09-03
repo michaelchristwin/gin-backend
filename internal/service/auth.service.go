@@ -60,7 +60,7 @@ func (s *authService) RegisterUser(ctx context.Context, req model.RegisterReques
 
 func (s *authService) Login(ctx context.Context, userReq model.RegisterRequest) (*model.Session, error) {
 	user, err := s.repo.GetByEmail(ctx, userReq.Email)
-	if err == nil {
+	if err != nil {
 		s.logger.Warn("authentication failed",
 			"reason", "invalid_credentials",
 		)
@@ -72,7 +72,7 @@ func (s *authService) Login(ctx context.Context, userReq model.RegisterRequest) 
 			"user_id", user.ID,
 			"reason", "invalid_credentials",
 		)
-		return nil, err
+		return nil, domain.ErrInvalidCredentials
 	}
 	if !match {
 		s.logger.Warn("authentication failed",

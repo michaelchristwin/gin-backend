@@ -46,7 +46,7 @@ func (h *AuthHandler) Login(c *gin.Context) {
 
 	maxAge := int(time.Until(session.ExpiresAt).Seconds())
 
-	c.SetCookie("session_id", string(session.ID), maxAge, "/", "localhost", true, true)
+	c.SetCookie("session_id", string(session.ID), maxAge, "/", "", true, true)
 	c.JSON(http.StatusOK, gin.H{"message": "Login successful",
 		"user": gin.H{"id": session.UserID, "email": input.Email}})
 }
@@ -74,7 +74,7 @@ func (h *AuthHandler) Logout(c *gin.Context) {
 		respondWithError(c, err)
 		return
 	}
-	c.SetCookie("sessionId", "", -1, "/", "", true, true)
+	c.SetCookie("session_id", "", -1, "/", "", true, true)
 	c.Status(http.StatusNoContent)
 }
 
