@@ -16,6 +16,16 @@ import (
 	"github.com/alexedwards/argon2id"
 )
 
+var dummyHash string
+
+func init() {
+	hash, err := argon2id.CreateHash("dummy-password-for-timing-safety", argon2id.DefaultParams)
+	if err != nil {
+		panic("failed to generate dummy hash: " + err.Error())
+	}
+	dummyHash = hash
+}
+
 type AuthService interface {
 	RegisterUser(ctx context.Context, userReq model.RegisterRequest) (*model.User, error)
 	Login(ctx context.Context, user model.RegisterRequest) (*model.Session, error)
@@ -61,10 +71,12 @@ func (s *authService) RegisterUser(ctx context.Context, req model.RegisterReques
 func (s *authService) Login(ctx context.Context, userReq model.RegisterRequest) (*model.Session, error) {
 	user, err := s.repo.GetByEmail(ctx, userReq.Email)
 	if err != nil {
-		s.logger.Warn("authentication failed",
-			"reason", "invalid_credentials",
-		)
-		return nil, domain.ErrInvalidCredentials
+		if errors.Is(err, domain.ErrUserNotFound) {
+			// still do the comparison, against a dummy hash, to burn the same amount of time
+			_, _ = argon2id.ComparePasswordAndHash(userReq.Password, dummyHash)
+			return nil, domain.ErrInvalidCredentials
+		}
+		return nil, fmt.Errorf("looking up user: %w", err)
 	}
 	match, err := argon2id.ComparePasswordAndHash(userReq.Password, user.PasswordHash)
 	if err != nil {
