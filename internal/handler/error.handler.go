@@ -31,6 +31,11 @@ var errorMap = map[error]apiError{
 		code:    "user_not_found",
 		message: "User not found.",
 	},
+	domain.ErrInvalidCredentials: {
+		status:  http.StatusUnauthorized,
+		code:    "invalid_credentials",
+		message: "Invalid email or password.",
+	},
 }
 
 func respondWithError(c *gin.Context, err error) {
