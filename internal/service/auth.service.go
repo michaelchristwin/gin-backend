@@ -68,11 +68,7 @@ func (s *authService) Login(ctx context.Context, userReq model.RegisterRequest) 
 	}
 	match, err := argon2id.ComparePasswordAndHash(userReq.Password, user.PasswordHash)
 	if err != nil {
-		s.logger.Warn("authentication failed",
-			"user_id", user.ID,
-			"reason", "invalid_credentials",
-		)
-		return nil, domain.ErrInvalidCredentials
+		return nil, fmt.Errorf("comparing password hash: %w", err)
 	}
 	if !match {
 		s.logger.Warn("authentication failed",
