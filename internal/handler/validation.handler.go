@@ -31,6 +31,8 @@ func validationMessage(fe validator.FieldError) string {
 		return fe.Field() + " must be at least " + fe.Param() + " characters."
 	case "email":
 		return fe.Field() + " must be a valid email address."
+	case "nefield":
+		return fe.Field() + " must be different from your current password."
 	default:
 		return fe.Field() + " is invalid."
 	}

@@ -52,7 +52,7 @@ func (s *authService) RegisterUser(ctx context.Context, req model.RegisterReques
 	passwordHash, err := argon2id.CreateHash(req.Password, argon2id.DefaultParams)
 	if err != nil {
 
-		return nil, domain.ErrInvalidCredentials
+		return nil, fmt.Errorf("creating password hash: %w", err)
 	}
 	if err := validation.Validate(ctx, req.Password, s.logger); err != nil {
 		return nil, err // e.g. ErrTooShort, ErrPwned
@@ -117,11 +117,7 @@ func (s *authService) ChangePassword(ctx context.Context, userID int64, currentP
 	}
 	match, err := argon2id.ComparePasswordAndHash(currentPassword, user.PasswordHash)
 	if err != nil {
-		s.logger.Warn("authentication failed",
-			"user_id", user.ID,
-			"reason", "invalid_credentials",
-		)
-		return err
+		return fmt.Errorf("comparing password hash: %w", err)
 	}
 	if !match {
 		s.logger.Warn("authentication failed",
@@ -132,7 +128,7 @@ func (s *authService) ChangePassword(ctx context.Context, userID int64, currentP
 	}
 	hash, err := argon2id.CreateHash(newPassword, argon2id.DefaultParams)
 	if err != nil {
-		return err
+		return fmt.Errorf("creating new password hash: %w", err)
 	}
 	if err := s.repo.UpdatePasswordHash(ctx, userID, hash); err != nil {
 		return err
