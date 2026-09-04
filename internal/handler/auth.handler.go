@@ -84,8 +84,8 @@ func (h *AuthHandler) UpdatePassword(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, formatValidationError(err))
 		return
 	}
-	userID := c.MustGet("user_id").(int64)
-	if err := h.authservice.ChangePassword(c.Request.Context(), userID, input.CurrentPassword, input.NewPassword); err != nil {
+	user := c.MustGet(middleware.UserContextKey).(model.UserWithPassword)
+	if err := h.authservice.ChangePassword(c.Request.Context(), user.ID, input.CurrentPassword, input.NewPassword); err != nil {
 		respondWithError(c, err)
 		return
 	}

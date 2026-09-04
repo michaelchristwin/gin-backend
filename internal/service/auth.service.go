@@ -108,10 +108,12 @@ func (s *authService) Logout(ctx context.Context, sessionId string) error {
 func (s *authService) ChangePassword(ctx context.Context, userID int64, currentPassword, newPassword string) error {
 	user, err := s.repo.GetById(ctx, userID)
 	if err != nil {
-		s.logger.Warn("authentication failed",
-			"reason", "invalid_credentials",
-		)
-		return err
+		if errors.Is(err, domain.ErrUserNotFound) {
+			// still do the comparison, against a dummy hash, to burn the same amount of time
+			_, _ = argon2id.ComparePasswordAndHash(currentPassword, dummyHash)
+			return domain.ErrInvalidCredentials
+		}
+		return fmt.Errorf("looking up user: %w", err)
 	}
 	match, err := argon2id.ComparePasswordAndHash(currentPassword, user.PasswordHash)
 	if err != nil {

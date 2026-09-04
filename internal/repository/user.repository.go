@@ -48,7 +48,10 @@ func (r *userRepository) Delete(ctx context.Context, id int64) error {
 func (r *userRepository) GetById(ctx context.Context, id int64) (*model.UserWithPassword, error) {
 	row, err := r.q.GetUserById(ctx, id)
 	if err != nil {
-		return nil, err
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, domain.ErrUserNotFound // ← check this line exists
+		}
+		return nil, fmt.Errorf("querying user by id: %w", err)
 	}
 	return &model.UserWithPassword{ID: row.ID, Email: row.Email, PasswordHash: row.PasswordHash, CreatedAt: row.CreatedAt}, nil
 }
